@@ -1,0 +1,10 @@
+[toolchain]
+channel = "1.80.1"
+
+# https://rust-lang.github.io/rustup/concepts/components.html
+components = [
+  "rust-analyzer"
+]
+
+# https://rust-lang.github.io/rustup/concepts/profiles.html
+profile = "default"
