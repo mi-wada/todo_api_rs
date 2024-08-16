@@ -1,0 +1,421 @@
+openapi: 3.1.0
+info:
+  title: The API for ToDo App.
+  version: 1.0.0
+  contact:
+    name: Mitsuaki Wada
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: user
+    description: Operations about users.
+  - name: task
+    description: Operations about tasks.
+paths:
+  /users:
+    post:
+      tags:
+        - user
+      summary: Create a new user.
+      operationId: createUser
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserPayload'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Error'
+                  - type: object
+                    properties:
+                      error:
+                        type: object
+                        properties:
+                          code:
+                            type: string
+                            enum:
+                              - EMAIL_EMPTY
+                              - EMAIL_TOO_LONG
+                              - EMAIL_WRONG_FORMAT
+                              - EMAIL_TAKEN
+                              - PASSWORD_EMPTY
+                              - PASSWORD_TOO_SHORT
+                              - PASSWORD_TOO_LONG
+                              - PASSWORD_WRONG_FORMAT
+  /login:
+    post:
+      tags:
+        - user
+      summary: Login to the application.
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginPayload'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessToken'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Error'
+                  - type: object
+                    properties:
+                      error:
+                        type: object
+                        properties:
+                          code:
+                            type: string
+                            enum:
+                              - AUTHENTICATION_FAILED
+  /tasks:
+    get:
+      tags:
+        - task
+      summary: Get all tasks.
+      operationId: getTasks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    post:
+      tags:
+        - task
+      summary: Create a new task.
+      operationId: createTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskPayload'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Error'
+                  - type: object
+                    properties:
+                      error:
+                        type: object
+                        properties:
+                          code:
+                            type: string
+                            enum:
+                              - TITLE_EMPTY
+                              - TITLE_TOO_LONG
+                              - DESCRIPTION_TOO_LONG
+                              - STATUS_UNKNOWN
+                              - DEADLINE_WRONG_FORMAT
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /tasks/{id}:
+    get:
+      tags:
+        - task
+      summary: Get a task by ID.
+      operationId: getTask
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/TaskId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    put:
+      tags:
+        - task
+      summary: Update a task by ID.
+      operationId: updateTask
+      description: |-
+        The fields that are not provided will be set to null.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/TaskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskPayload'
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Error'
+                  - type: object
+                    properties:
+                      error:
+                        type: object
+                        properties:
+                          code:
+                            type: string
+                            enum:
+                              - TITLE_EMPTY
+                              - TITLE_TOO_LONG
+                              - DESCRIPTION_TOO_LONG
+                              - STATUS_UNKNOWN
+                              - DEADLINE_WRONG_FORMAT
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+    delete:
+      tags:
+        - task
+      summary: Delete a task by ID.
+      operationId: deleteTask
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/TaskId'
+      responses:
+        '204':
+          $ref: '#/components/responses/NoContent'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+
+components:
+  responses:
+    NoContent:
+      description: No Content
+    NotFoundError:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Error'
+              - type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - NOT_FOUND
+    UnauthorizedError:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/Error'
+              - type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                          - AUTHENTICATION_FAILED
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/UserId'
+        email:
+          $ref: '#/components/schemas/UserEmail'
+      required:
+        - id
+        - email
+    UserId:
+      type: string
+      format: uuid
+    UserEmail:
+      type: string
+      format: email
+    UserPassword:
+      type: string
+      format: password
+    CreateUserPayload:
+      type: object
+      properties:
+        email:
+          $ref: '#/components/schemas/UserEmail'
+        password:
+          $ref: '#/components/schemas/UserPassword'
+      required:
+        - email
+        - password
+
+    LoginPayload:
+      type: object
+      properties:
+        email:
+          $ref: '#/components/schemas/UserEmail'
+        password:
+          $ref: '#/components/schemas/UserPassword'
+      required:
+        - email
+        - password
+    AccessToken:
+      type: object
+      properties:
+        token:
+          type: string
+          format: JWT
+
+    Task:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/TaskId'
+        title:
+          $ref: '#/components/schemas/TaskTitle'
+        description:
+          $ref: '#/components/schemas/TaskDescription'
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        deadline:
+          $ref: '#/components/schemas/TaskDeadline'
+      required:
+        - id
+        - title
+        - status
+        - deadline
+    TaskId:
+      type: string
+      format: uuid
+    TaskTitle:
+      type: string
+      minLength: 1
+      maxLength: 50
+      example: Buy milk
+    TaskDescription:
+      type: string
+      maxLength: 1000
+      nullable: true
+      example: Buy milk for breakfast. At least 2 liters.
+    TaskStatus:
+      type: string
+      enum:
+        - TODO
+        - IN_PROGRESS
+        - DONE
+    TaskDeadline:
+      type: string
+      format: date-time
+      nullable: true
+    CreateTaskPayload:
+      type: object
+      properties:
+        title:
+          $ref: '#/components/schemas/TaskTitle'
+        description:
+          $ref: '#/components/schemas/TaskDescription'
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        deadline:
+          $ref: '#/components/schemas/TaskDeadline'
+      required:
+        - title
+        - status
+    UpdateTaskPayload:
+      type: object
+      properties:
+        title:
+          $ref: '#/components/schemas/TaskTitle'
+        description:
+          $ref: '#/components/schemas/TaskDescription'
+        status:
+          $ref: '#/components/schemas/TaskStatus'
+        deadline:
+          $ref: '#/components/schemas/TaskDeadline'
+      required:
+        - title
+        - status
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+              description: For debugging purposes.
+          required:
+            - code
+            - message
+      required:
+        - error
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []

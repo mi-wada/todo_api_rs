@@ -1,0 +1,28 @@
+name: Lint
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  openapi_lint:
+    runs-on: ubuntu-latest
+    env:
+      SPECTRAL_CLI_VERSION: "6.11.1"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache spectral-cli
+        id: cache-spectral-cli
+        uses: actions/cache@v3
+        with:
+          path: |
+            /usr/local/bin/spectral
+            /usr/local/lib/node_modules/@stoplight/spectral-cli
+          key: ${{ runner.os }}-spectral-cli-${{ env.SPECTRAL_CLI_VERSION }}
+      - if: steps.cache-spectral-cli.outputs.cache-hit != 'true'
+        name: Install spectral-cli
+        run: npm install -g @stoplight/spectral-cli@${{ env.SPECTRAL_CLI_VERSION }}
+      - run: spectral lint ./docs/openapi.yaml

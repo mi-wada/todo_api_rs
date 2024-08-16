@@ -1,0 +1,12 @@
+extends:
+  - "spectral:oas"
+
+overrides:
+  - files:
+      - "**/*.yaml"
+    rules:
+      operation-description: "off"
+  - files:
+      - "**/*.yaml"
+    rules:
+      info-description: "off"
