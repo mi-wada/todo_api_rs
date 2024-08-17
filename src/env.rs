@@ -1,5 +1,6 @@
 use std::env;
 
+#[derive(Clone)]
 pub(crate) struct Env {
     pub(crate) port: u16,
     pub(crate) database_url: String,
