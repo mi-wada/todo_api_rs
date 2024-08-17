@@ -10,7 +10,7 @@ Run at <http://localhost:8080>.
 
 ```shell
 cp .env.development .env
-cargo run
+cargo watch -x run
 ```
 
 ## Run DB schema change
