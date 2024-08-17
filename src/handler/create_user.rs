@@ -42,6 +42,7 @@ pub(crate) async fn create_user(
 
     let id = user::Id::new();
 
+    // TODO: Move this to other module.
     match sqlx::query(
         r#"
 INSERT INTO users (id, email, password)
