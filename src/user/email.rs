@@ -31,6 +31,12 @@ impl Email {
     }
 }
 
+impl Email {
+    pub(crate) fn value(&self) -> &str {
+        &self.email
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

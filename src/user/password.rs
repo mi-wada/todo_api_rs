@@ -25,6 +25,12 @@ impl Password {
     }
 }
 
+impl Password {
+    pub(crate) fn value(&self) -> &str {
+        &self.password
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

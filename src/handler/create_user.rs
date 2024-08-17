@@ -2,6 +2,7 @@ use axum::{extract::State, http::StatusCode, Json};
 
 use crate::{
     handler::AppState,
+    password,
     user::{self, User},
 };
 
@@ -37,9 +38,33 @@ pub(crate) async fn create_user(
             return bad_request(ErrorCode::PasswordTooLong, "Password is too long");
         }
     };
+    let hashed_password = password::hash_password(password.value());
+
     let id = user::Id::new();
 
-    // TODO: Save user to the database
+    match sqlx::query(
+        r#"
+INSERT INTO users (id, email, password)
+VALUES ($1::uuid, $2, $3)
+        "#,
+    )
+    .bind(id.value())
+    .bind(email.value())
+    .bind(hashed_password)
+    .execute(&state.db_pool)
+    .await
+    {
+        Ok(_) => {}
+        Err(sqlx::Error::Database(db_error)) if db_error.is_unique_violation() => {
+            return bad_request(ErrorCode::EmailTaken, "Email is already taken");
+        }
+        Err(_) => {
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(CreateUserResponse::InternalServerError),
+            );
+        }
+    }
 
     (
         StatusCode::CREATED,
@@ -58,6 +83,7 @@ pub(crate) struct CreateUserPayload {
 pub(crate) enum CreateUserResponse {
     Created(User),
     BadRequest(Error),
+    InternalServerError,
 }
 
 fn bad_request(error: ErrorCode, message: &str) -> (StatusCode, Json<CreateUserResponse>) {

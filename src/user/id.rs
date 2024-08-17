@@ -14,6 +14,12 @@ impl Id {
     }
 }
 
+impl Id {
+    pub(crate) fn value(&self) -> &str {
+        &self.id
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
