@@ -1,9 +1,10 @@
-use axum::{extract::State, http::StatusCode, response::IntoResponse};
-
 use crate::env;
 
 mod create_user;
 pub(crate) use create_user::create_user;
+
+mod get_healthz;
+pub(crate) use get_healthz::get_healthz;
 
 #[derive(Clone)]
 pub(crate) struct AppState {
@@ -14,17 +15,5 @@ pub(crate) struct AppState {
 impl AppState {
     pub(crate) fn new(env: env::Env, db_pool: sqlx::PgPool) -> Self {
         Self { env, db_pool }
-    }
-}
-
-pub(crate) async fn get_healthz(State(state): State<AppState>) -> impl IntoResponse {
-    if sqlx::query("SELECT 1")
-        .fetch_one(&state.db_pool)
-        .await
-        .is_err()
-    {
-        StatusCode::INTERNAL_SERVER_ERROR
-    } else {
-        StatusCode::OK
     }
 }
