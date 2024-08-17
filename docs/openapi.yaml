@@ -50,13 +50,13 @@ paths:
                           code:
                             type: string
                             enum:
-                              - EMAIL_EMPTY
-                              - EMAIL_TOO_LONG
-                              - EMAIL_WRONG_FORMAT
-                              - EMAIL_TAKEN
-                              - PASSWORD_EMPTY
-                              - PASSWORD_TOO_SHORT
-                              - PASSWORD_TOO_LONG
+                              - EmailEmpty
+                              - EmailTooLong
+                              - EmailWrongFormat
+                              - EmailTaken
+                              - PasswordEmpty
+                              - PasswordTooShort
+                              - PasswordTooLong
   /login:
     post:
       tags:
@@ -77,6 +77,23 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AccessToken'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Error'
+                  - type: object
+                    properties:
+                      error:
+                        type: object
+                        properties:
+                          code:
+                            type: string
+                            enum:
+                              - EmailEmpty
+                              - PasswordEmpty
         '401':
           description: Unauthorized
           content:
@@ -92,7 +109,7 @@ paths:
                           code:
                             type: string
                             enum:
-                              - AUTHENTICATION_FAILED
+                              - AuthenticationFailed
   /tasks:
     get:
       tags:
@@ -143,11 +160,11 @@ paths:
                           code:
                             type: string
                             enum:
-                              - TITLE_EMPTY
-                              - TITLE_TOO_LONG
-                              - DESCRIPTION_TOO_LONG
-                              - STATUS_UNKNOWN
-                              - DEADLINE_WRONG_FORMAT
+                              - TitleEmpty
+                              - TitleTooLong
+                              - DescriptionTooLong
+                              - StatusUnknown
+                              - DeadlineWrongFormat
         '401':
           $ref: '#/components/responses/UnauthorizedError'
   /tasks/{id}:
@@ -210,11 +227,11 @@ paths:
                           code:
                             type: string
                             enum:
-                              - TITLE_EMPTY
-                              - TITLE_TOO_LONG
-                              - DESCRIPTION_TOO_LONG
-                              - STATUS_UNKNOWN
-                              - DEADLINE_WRONG_FORMAT
+                              - TitleEmpty
+                              - TitleTooLong
+                              - DescriptionTooLong
+                              - StatusUnknown
+                              - DeadlineWrongFormat
         '401':
           $ref: '#/components/responses/UnauthorizedError'
         '404':
@@ -258,7 +275,7 @@ components:
                       code:
                         type: string
                         enum:
-                          - NOT_FOUND
+                          - NotFound
     UnauthorizedError:
       description: Unauthorized
       content:
@@ -274,7 +291,7 @@ components:
                       code:
                         type: string
                         enum:
-                          - AUTHENTICATION_FAILED
+                          - AuthenticationFailed
   schemas:
     User:
       type: object
@@ -357,9 +374,9 @@ components:
     TaskStatus:
       type: string
       enum:
-        - TODO
-        - IN_PROGRESS
-        - DONE
+        - ToDo
+        - InProgress
+        - Done
     TaskDeadline:
       type: string
       format: date-time

@@ -6,6 +6,9 @@ pub(crate) use create_user::create_user;
 mod get_healthz;
 pub(crate) use get_healthz::get_healthz;
 
+mod login;
+pub(crate) use login::login;
+
 #[derive(Clone)]
 pub(crate) struct AppState {
     pub(crate) env: env::Env,

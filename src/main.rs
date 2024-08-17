@@ -30,6 +30,8 @@ async fn main() {
         .route("/healthz", get(handler::get_healthz))
         // curl -X POST http://localhost:8080/users -H "Content-Type: application/json" -d '{"email": "user@example.com", "password": "password"}'
         .route("/users", post(handler::create_user))
+        // curl -X POST http://localhost:8080/login -H "Content-Type: application/json" -d '{"email": "user@example.com", "password": "password"}'
+        .route("/login", post(handler::login))
         .with_state(handler::AppState::new(env, db_pool));
 
     axum::serve(listener, app).await.unwrap();
