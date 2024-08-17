@@ -1,4 +1,7 @@
-use axum::{routing::get, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use sqlx::postgres::PgPoolOptions;
 
 mod env;
@@ -25,6 +28,8 @@ async fn main() {
     let app = Router::new()
         // curl -v -X GET http://localhost:8080/healthz
         .route("/healthz", get(handler::get_healthz))
+        // curl -X POST http://localhost:8080/users -H "Content-Type: application/json" -d '{"email": "user@example.com", "password": "password"}'
+        .route("/users", post(handler::create_user))
         .with_state(handler::AppState::new(env, db_pool));
 
     axum::serve(listener, app).await.unwrap();

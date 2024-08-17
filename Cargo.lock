@@ -1585,6 +1585,7 @@ dependencies = [
  "bcrypt",
  "dotenvy",
  "regex",
+ "serde",
  "sqlx",
  "tokio",
  "uuid",

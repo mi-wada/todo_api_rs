@@ -2,6 +2,9 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse};
 
 use crate::env;
 
+mod create_user;
+pub(crate) use create_user::create_user;
+
 #[derive(Clone)]
 pub(crate) struct AppState {
     pub(crate) env: env::Env,

@@ -11,3 +11,4 @@ sqlx = { version = "0.8.0", features = ["runtime-tokio", "postgres"] }
 bcrypt = "0.15.1"
 regex = "1.10.6"
 uuid = { version = "1.10.0", features = ["v7"] }
+serde = { version = "1.0.208", features = ["derive"] }

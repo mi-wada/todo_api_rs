@@ -1,6 +1,8 @@
 use uuid::Uuid;
 
-struct Id {
+#[derive(serde::Serialize)]
+#[serde(transparent)]
+pub(crate) struct Id {
     id: String,
 }
 
