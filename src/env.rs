@@ -8,6 +8,7 @@ pub(crate) struct Env {
 }
 
 impl Env {
+    /// Load environment variables from .env file.
     pub(crate) fn init() {
         dotenvy::dotenv().expect("Not found .env file");
     }
