@@ -57,7 +57,6 @@ paths:
                               - PASSWORD_EMPTY
                               - PASSWORD_TOO_SHORT
                               - PASSWORD_TOO_LONG
-                              - PASSWORD_WRONG_FORMAT
   /login:
     post:
       tags:
