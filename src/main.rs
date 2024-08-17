@@ -1,6 +1,7 @@
 use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::get, Router};
 
 mod env;
+mod handler;
 
 #[tokio::main]
 async fn main() {
@@ -12,17 +13,8 @@ async fn main() {
         .unwrap();
     let app = Router::new()
         // curl -v -X GET http://localhost:8080/healthz
-        .route("/healthz", get(get_healthz))
-        .with_state(AppState { env });
+        .route("/healthz", get(handler::get_healthz))
+        .with_state(handler::AppState::new(env));
 
     axum::serve(listener, app).await.unwrap();
-}
-
-#[derive(Clone)]
-struct AppState {
-    env: env::Env,
-}
-
-async fn get_healthz(State(state): State<AppState>) -> impl IntoResponse {
-    StatusCode::OK
 }
