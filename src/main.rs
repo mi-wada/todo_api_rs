@@ -4,6 +4,7 @@ use sqlx::postgres::PgPoolOptions;
 mod env;
 mod handler;
 mod password;
+mod user;
 
 #[tokio::main]
 async fn main() {
