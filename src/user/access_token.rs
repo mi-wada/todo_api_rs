@@ -1,5 +1,7 @@
 use jsonwebtoken::{DecodingKey, EncodingKey, Header};
 
+const ACCESS_TOKEN_TTL: chrono::Duration = chrono::Duration::hours(12);
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub(crate) struct Claims {
     sub: String,
@@ -10,12 +12,15 @@ impl Claims {
     pub(crate) fn sub(&self) -> &str {
         &self.sub
     }
+
+    pub(crate) fn exp(&self) -> usize {
+        self.exp
+    }
 }
 
 /// Encode a claim into an access token with JWT format.
 pub(crate) fn encode(sub: crate::user::Id, exp: Option<usize>, secret: &str) -> String {
-    // TODO: Change the default expiration time to a reasonable value. 1 day?
-    let exp = exp.unwrap_or(10_000_000_000);
+    let exp = exp.unwrap_or((chrono::Utc::now() + ACCESS_TOKEN_TTL).timestamp() as usize);
 
     let claims = Claims {
         sub: sub.value().into(),
@@ -67,6 +72,14 @@ mod tests {
 
         let claims = decode(&token, secret).unwrap();
         assert_eq!(claims.sub(), sub.value());
+        // token must be valid for 12 hours
+        assert!(
+            (claims.exp()
+                // About `- chrono::Duration::minutes(1)`: To offset the elapsed time since the token was generated.
+                > (chrono::Utc::now() - chrono::Duration::minutes(1) + ACCESS_TOKEN_TTL).timestamp()
+                    as usize)
+                && (claims.exp() <= (chrono::Utc::now() + ACCESS_TOKEN_TTL).timestamp() as usize)
+        );
     }
 
     #[test]

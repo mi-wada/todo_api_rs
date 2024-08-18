@@ -1,6 +1,5 @@
 use axum::{extract::State, http::StatusCode, Json};
 use sqlx::Row;
-use uuid::Uuid;
 
 use crate::{handler::AppState, user};
 
