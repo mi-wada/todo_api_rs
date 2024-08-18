@@ -1,7 +1,8 @@
 use axum::{extract::State, http::StatusCode, Json};
 use sqlx::Row;
+use uuid::Uuid;
 
-use crate::handler::AppState;
+use crate::{handler::AppState, user};
 
 pub(crate) async fn login(
     State(state): State<AppState>,
@@ -14,27 +15,26 @@ pub(crate) async fn login(
         return bad_request(BadRequestErrorCode::PasswordEmpty, "Password is missing");
     }
 
-    if authenticate(
+    match authenticate(
         &state.db_pool,
         &payload.email.clone().unwrap(),
         &payload.password.clone().unwrap(),
     )
     .await
     {
-        (
+        Some(user_id) => (
             StatusCode::OK,
             Json(LoginResponse::Ok {
-                token: "TODO".to_string(),
+                token: user::access_token::encode(user_id, None, &state.env.access_token_secret),
             }),
-        )
-    } else {
-        (
+        ),
+        None => (
             StatusCode::UNAUTHORIZED,
             Json(LoginResponse::Unauthorized(UnauthorizedError {
                 code: UnauthorizedErrorCode::AuthenticationFailed,
                 message: "Authentication failed".into(),
             })),
-        )
+        ),
     }
 }
 
@@ -86,10 +86,10 @@ pub(crate) enum UnauthorizedErrorCode {
 }
 
 // TODO: Move it to user module.
-async fn authenticate(db_pool: &sqlx::PgPool, email: &str, password: &str) -> bool {
-    let hashed_password = sqlx::query(
+async fn authenticate(db_pool: &sqlx::PgPool, email: &str, password: &str) -> Option<user::Id> {
+    let (id, hashed_password) = sqlx::query(
         r#"
-SELECT password
+SELECT id, password
 FROM users
 WHERE email = $1
         "#,
@@ -97,8 +97,17 @@ WHERE email = $1
     .bind(email)
     .fetch_one(db_pool)
     .await
-    .map(|row| row.get::<String, _>("password"))
+    .map(|row| {
+        (
+            row.get::<sqlx::types::Uuid, _>("id"),
+            row.get::<String, _>("password"),
+        )
+    })
     .unwrap();
 
-    crate::password::verify_password(password, &hashed_password)
+    if crate::password::verify_password(password, &hashed_password) {
+        Some(user::Id::restore(id.into()))
+    } else {
+        None
+    }
 }

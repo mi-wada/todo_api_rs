@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 #[serde(transparent)]
 pub(crate) struct Id {
     id: String,
@@ -11,6 +11,10 @@ impl Id {
         Self {
             id: Uuid::now_v7().into(),
         }
+    }
+
+    pub(crate) fn restore(id: String) -> Self {
+        Self { id }
     }
 }
 
