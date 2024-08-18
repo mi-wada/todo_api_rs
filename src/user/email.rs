@@ -1,6 +1,6 @@
-static MAX_EMAIL_LENGTH: usize = 255;
+const MAX_EMAIL_LENGTH: usize = 255;
 // https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
-static EMAIL_REGEX: &str = r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$";
+const EMAIL_REGEX: &str = r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$";
 
 #[derive(Debug, PartialEq, serde::Serialize)]
 #[serde(transparent)]

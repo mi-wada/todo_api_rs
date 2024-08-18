@@ -1,5 +1,5 @@
-static MIN_PASSWORD_LENGTH: usize = 8;
-static MAX_PASSWORD_LENGTH: usize = 255;
+const MIN_PASSWORD_LENGTH: usize = 8;
+const MAX_PASSWORD_LENGTH: usize = 255;
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct Password {
