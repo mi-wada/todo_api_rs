@@ -9,6 +9,9 @@ pub(crate) use get_healthz::get_healthz;
 mod login;
 pub(crate) use login::login;
 
+mod create_task;
+pub(crate) use create_task::create_task;
+
 #[derive(Clone)]
 pub(crate) struct AppState {
     pub(crate) env: env::Env,

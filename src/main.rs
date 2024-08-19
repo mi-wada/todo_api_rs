@@ -34,6 +34,8 @@ async fn main() {
         .route("/users", post(handler::create_user))
         // curl -X POST http://localhost:8080/login -H "Content-Type: application/json" -d '{"email": "user@example.com", "password": "password"}'
         .route("/login", post(handler::login))
+        // curl -X POST http://localhost:8080/tasks -H "Content-Type: application/json" -H "Authorization: Bearer " -d '{"title": "task title", "status": "ToDo"}'
+        .route("/tasks", post(handler::create_task))
         .with_state(handler::AppState::new(env, db_pool));
 
     axum::serve(listener, app).await.unwrap();

@@ -20,9 +20,9 @@ pub(crate) struct Task {
     id: Id,
     user_id: user::Id,
     title: Title,
-    description: Description,
+    description: Option<Description>,
     status: Status,
-    deadline: Deadline,
+    deadline: Option<Deadline>,
 }
 
 impl Task {
@@ -30,9 +30,9 @@ impl Task {
         id: Id,
         user_id: user::Id,
         title: Title,
-        description: Description,
+        description: Option<Description>,
         status: Status,
-        deadline: Deadline,
+        deadline: Option<Deadline>,
     ) -> Self {
         Self {
             id,

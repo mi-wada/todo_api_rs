@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq, serde::Serialize)]
+#[derive(Debug, PartialEq, serde::Serialize, Clone, Copy)]
 pub(crate) enum Status {
     ToDo,
     InProgress,
@@ -7,7 +7,7 @@ pub(crate) enum Status {
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum StatusNewError {
-    StatusUnknown,
+    Unknown,
 }
 
 impl TryFrom<&str> for Status {
@@ -18,7 +18,17 @@ impl TryFrom<&str> for Status {
             "ToDo" => Ok(Self::ToDo),
             "InProgress" => Ok(Self::InProgress),
             "Done" => Ok(Self::Done),
-            _ => Err(Self::Error::StatusUnknown),
+            _ => Err(Self::Error::Unknown),
+        }
+    }
+}
+
+impl From<Status> for &str {
+    fn from(status: Status) -> &'static str {
+        match status {
+            Status::ToDo => "ToDo",
+            Status::InProgress => "InProgress",
+            Status::Done => "Done",
         }
     }
 }
@@ -40,6 +50,6 @@ mod tests {
         let status_str = "Unknown";
         let status = Status::try_from(status_str);
         assert!(status.is_err());
-        assert!(matches!(status.unwrap_err(), StatusNewError::StatusUnknown));
+        assert!(matches!(status.unwrap_err(), StatusNewError::Unknown));
     }
 }

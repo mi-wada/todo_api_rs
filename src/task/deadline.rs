@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq, serde::Serialize)]
+#[derive(Debug, PartialEq, Clone, serde::Serialize)]
 #[serde(transparent)]
 pub(crate) struct Deadline {
     value: chrono::DateTime<chrono::Utc>,
@@ -6,17 +6,23 @@ pub(crate) struct Deadline {
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum DeadlineNewError {
-    InvalidFormat,
+    WrongFormat,
 }
 
 impl Deadline {
     pub(crate) fn new(value: String) -> Result<Self, DeadlineNewError> {
         let value = chrono::DateTime::parse_from_rfc3339(&value)
-            .map_err(|_| DeadlineNewError::InvalidFormat)?;
+            .map_err(|_| DeadlineNewError::WrongFormat)?;
 
         Ok(Self {
             value: value.into(),
         })
+    }
+}
+
+impl Deadline {
+    pub(crate) fn value(&self) -> &chrono::DateTime<chrono::Utc> {
+        &self.value
     }
 }
 
@@ -57,7 +63,7 @@ mod tests {
             assert!(deadline.is_err());
             assert!(matches!(
                 deadline.unwrap_err(),
-                DeadlineNewError::InvalidFormat
+                DeadlineNewError::WrongFormat
             ));
         }
     }

@@ -1,6 +1,6 @@
 const MAX_LENGTH: usize = 1_000;
 
-#[derive(Debug, PartialEq, serde::Serialize)]
+#[derive(Debug, PartialEq, Clone, serde::Serialize)]
 #[serde(transparent)]
 pub(crate) struct Description {
     value: String,
@@ -18,6 +18,12 @@ impl Description {
         }
 
         Ok(Self { value })
+    }
+}
+
+impl Description {
+    pub(crate) fn value(&self) -> &str {
+        &self.value
     }
 }
 

@@ -1,4 +1,4 @@
-const MAX_LENGTH: usize = 100;
+const MAX_LENGTH: usize = 40;
 
 #[derive(Debug, PartialEq, serde::Serialize)]
 #[serde(transparent)]
@@ -22,6 +22,12 @@ impl Title {
         }
 
         Ok(Self { value })
+    }
+}
+
+impl Title {
+    pub(crate) fn value(&self) -> &str {
+        &self.value
     }
 }
 
