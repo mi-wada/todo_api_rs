@@ -5,7 +5,7 @@ use axum::{
 };
 
 use crate::{
-    handler::AppState,
+    handler::{AppState, UnauthorizedError, UnauthorizedErrorCode},
     task::{self, Task},
     user,
 };
@@ -154,18 +154,6 @@ fn unauthorized_error(
             message,
         })),
     )
-}
-
-#[derive(serde::Serialize)]
-pub(crate) struct UnauthorizedError {
-    code: UnauthorizedErrorCode,
-    message: String,
-}
-
-#[derive(serde::Serialize)]
-pub(crate) enum UnauthorizedErrorCode {
-    AuthenticationFailed,
-    TokenExpired,
 }
 
 fn bad_request_error(

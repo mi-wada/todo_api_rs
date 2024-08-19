@@ -23,3 +23,15 @@ impl AppState {
         Self { env, db_pool }
     }
 }
+
+#[derive(serde::Serialize)]
+pub(crate) struct UnauthorizedError {
+    code: UnauthorizedErrorCode,
+    message: String,
+}
+
+#[derive(serde::Serialize)]
+pub(crate) enum UnauthorizedErrorCode {
+    AuthenticationFailed,
+    TokenExpired,
+}
