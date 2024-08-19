@@ -1,5 +1,16 @@
 CREATE TABLE users (
   id UUID PRIMARY KEY,
   email VARCHAR(255) NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL
+  password VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE tasks (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  title VARCHAR(255) NOT NULL,
+  description VARCHAR(2000),
+  status VARCHAR(20) NOT NULL,
+  deadline TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
