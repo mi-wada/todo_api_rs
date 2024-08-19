@@ -6,7 +6,9 @@ use sqlx::postgres::PgPoolOptions;
 
 mod env;
 mod handler;
+mod id;
 mod password;
+mod task;
 mod user;
 
 #[tokio::main]
