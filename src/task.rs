@@ -13,11 +13,34 @@ pub(crate) use status::{Status, StatusNewError};
 mod deadline;
 pub(crate) use deadline::{Deadline, DeadlineNewError};
 
+use crate::user;
+
 #[derive(serde::Serialize)]
 pub(crate) struct Task {
-    id: crate::task::Id,
-    title: crate::task::Title,
-    description: crate::task::Description,
-    status: crate::task::Status,
-    deadline: crate::task::Deadline,
+    id: Id,
+    user_id: user::Id,
+    title: Title,
+    description: Description,
+    status: Status,
+    deadline: Deadline,
+}
+
+impl Task {
+    pub(crate) fn new(
+        id: Id,
+        user_id: user::Id,
+        title: Title,
+        description: Description,
+        status: Status,
+        deadline: Deadline,
+    ) -> Self {
+        Self {
+            id,
+            user_id,
+            title,
+            description,
+            status,
+            deadline,
+        }
+    }
 }
