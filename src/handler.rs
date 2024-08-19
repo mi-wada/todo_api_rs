@@ -35,3 +35,14 @@ pub(crate) enum UnauthorizedErrorCode {
     AuthenticationFailed,
     TokenExpired,
 }
+
+#[derive(serde::Serialize)]
+pub(crate) struct InternalServerError {
+    code: InternalServerErrorCode,
+    message: String,
+}
+
+#[derive(serde::Serialize)]
+pub(crate) enum InternalServerErrorCode {
+    InternalServerError,
+}

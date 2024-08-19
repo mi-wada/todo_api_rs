@@ -5,7 +5,10 @@ use axum::{
 };
 
 use crate::{
-    handler::{AppState, UnauthorizedError, UnauthorizedErrorCode},
+    handler::{
+        AppState, InternalServerError, InternalServerErrorCode, UnauthorizedError,
+        UnauthorizedErrorCode,
+    },
     task::{self, Task},
     user,
 };
@@ -102,7 +105,7 @@ pub(crate) async fn create_task(
     };
 
     // TODO: Move this to other module.
-    sqlx::query(
+    if sqlx::query(
         r#"
 INSERT INTO tasks (id, user_id, title, description, status, deadline)
 VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6)
@@ -116,7 +119,18 @@ VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6)
     .bind(deadline.clone().map(|d| *d.value()))
     .execute(&state.db_pool)
     .await
-    .unwrap();
+    .is_err()
+    {
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(CreateIssueResponse::InternalServerError(
+                InternalServerError {
+                    code: InternalServerErrorCode::InternalServerError,
+                    message: "Internal server error".into(),
+                },
+            )),
+        );
+    }
 
     let task = Task::new(id, user_id, title, description, status, deadline);
 
@@ -140,7 +154,7 @@ pub(crate) enum CreateIssueResponse {
     Created(Task),
     BadRequest(BadRequestError),
     Unauthorized(UnauthorizedError),
-    InternalServerError,
+    InternalServerError(InternalServerError),
 }
 
 fn unauthorized_error(
