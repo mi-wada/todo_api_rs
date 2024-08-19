@@ -292,6 +292,7 @@ components:
                         type: string
                         enum:
                           - AuthenticationFailed
+                          - TokenExpired
   schemas:
     User:
       type: object
@@ -345,6 +346,8 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/TaskId'
+        user_id:
+          $ref: '#/components/schemas/UserId'
         title:
           $ref: '#/components/schemas/TaskTitle'
         description:
