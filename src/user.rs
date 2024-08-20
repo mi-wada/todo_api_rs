@@ -9,7 +9,7 @@ pub(crate) use id::Id;
 
 pub(crate) mod access_token;
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Clone)]
 pub(crate) struct User {
     id: crate::user::Id,
     email: crate::user::Email,
@@ -18,5 +18,15 @@ pub(crate) struct User {
 impl User {
     pub(crate) fn new(id: crate::user::Id, email: crate::user::Email) -> Self {
         Self { id, email }
+    }
+}
+
+impl User {
+    pub(crate) fn id(&self) -> &crate::user::Id {
+        &self.id
+    }
+
+    pub(crate) fn email(&self) -> &crate::user::Email {
+        &self.email
     }
 }

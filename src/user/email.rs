@@ -2,7 +2,7 @@ const MAX_LEN: usize = 255;
 // https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
 const EMAIL_REGEX: &str = r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$";
 
-#[derive(Debug, PartialEq, serde::Serialize)]
+#[derive(Debug, PartialEq, serde::Serialize, Clone)]
 #[serde(transparent)]
 pub(crate) struct Email {
     email: String,
@@ -28,6 +28,10 @@ impl Email {
         }
 
         Ok(Self { email })
+    }
+
+    pub(crate) fn restore(email: String) -> Self {
+        Self::new(email).unwrap()
     }
 }
 

@@ -1,47 +1,16 @@
-use axum::{
-    extract::State,
-    http::{header, HeaderMap, StatusCode},
-    Json,
-};
+use axum::{extract::State, http::StatusCode, Extension, Json};
 
 use crate::{
-    handler::{
-        AppState, InternalServerError, InternalServerErrorCode, UnauthorizedError,
-        UnauthorizedErrorCode,
-    },
+    handler::{AppState, InternalServerError, InternalServerErrorCode},
     task::{self, Task},
-    user,
+    user::User,
 };
 
 pub(crate) async fn create_task(
-    headers: HeaderMap,
     State(state): State<AppState>,
+    Extension(user): Extension<User>,
     payload: axum::Json<CreateTaskPayload>,
 ) -> (StatusCode, Json<CreateIssueResponse>) {
-    let token = match headers.get(header::AUTHORIZATION.as_str()) {
-        Some(token) => token.to_str().unwrap().strip_prefix("Bearer ").unwrap(),
-        None => {
-            return unauthorized_error(
-                UnauthorizedErrorCode::AuthenticationFailed,
-                "Authentication failed".into(),
-            )
-        }
-    };
-
-    // TODO: Check existence of user
-    let user_id = match user::access_token::decode(token, &state.env.access_token_secret) {
-        Ok(claims) => user::Id::restore(claims.sub().into()),
-        Err(user::access_token::DecodeError::Expired) => {
-            return unauthorized_error(UnauthorizedErrorCode::TokenExpired, "Token expired".into());
-        }
-        Err(user::access_token::DecodeError::Tempered) => {
-            return unauthorized_error(
-                UnauthorizedErrorCode::AuthenticationFailed,
-                "Authentication failed".into(),
-            );
-        }
-    };
-
     let id = task::Id::new();
 
     if payload.title.is_none() {
@@ -112,7 +81,7 @@ VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6)
         "#,
     )
     .bind(id.value())
-    .bind(user_id.value())
+    .bind(user.id().value())
     .bind(title.value())
     .bind(description.clone().map(|d| d.value().to_string()))
     .bind::<&str>(status.into())
@@ -132,7 +101,7 @@ VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6)
         );
     }
 
-    let task = Task::new(id, user_id, title, description, status, deadline);
+    let task = Task::new(id, user.id().clone(), title, description, status, deadline);
 
     (
         StatusCode::CREATED,
@@ -153,21 +122,7 @@ pub(crate) struct CreateTaskPayload {
 pub(crate) enum CreateIssueResponse {
     Created(Task),
     BadRequest(BadRequestError),
-    Unauthorized(UnauthorizedError),
     InternalServerError(InternalServerError),
-}
-
-fn unauthorized_error(
-    code: UnauthorizedErrorCode,
-    message: String,
-) -> (StatusCode, Json<CreateIssueResponse>) {
-    (
-        StatusCode::UNAUTHORIZED,
-        Json(CreateIssueResponse::Unauthorized(UnauthorizedError {
-            code,
-            message,
-        })),
-    )
 }
 
 fn bad_request_error(
