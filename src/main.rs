@@ -20,7 +20,7 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", env.port))
         .await
-        .unwrap();
+        .expect("Failed to bind to port");
 
     let db_pool = db_pool(&env).await;
     let app_state = handler::AppState::new(env, db_pool);
