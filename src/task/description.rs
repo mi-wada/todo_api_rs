@@ -1,4 +1,4 @@
-const MAX_LENGTH: usize = 1_000;
+const MAX_LEN: usize = 1_000;
 
 #[derive(Debug, PartialEq, Clone, serde::Serialize)]
 #[serde(transparent)]
@@ -13,7 +13,7 @@ pub(crate) enum DescriptionNewError {
 
 impl Description {
     pub(crate) fn new(value: String) -> Result<Self, DescriptionNewError> {
-        if value.len() > MAX_LENGTH {
+        if value.len() > MAX_LEN {
             return Err(DescriptionNewError::TooLong);
         }
 
@@ -41,7 +41,7 @@ mod tests {
 
     #[test]
     fn test_description_new_too_long() {
-        let description_str = "a".repeat(MAX_LENGTH + 1);
+        let description_str = "a".repeat(MAX_LEN + 1);
         let description = Description::new(description_str);
         assert!(description.is_err());
         assert!(matches!(

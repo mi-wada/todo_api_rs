@@ -1,4 +1,4 @@
-const MAX_LENGTH: usize = 40;
+const MAX_LEN: usize = 40;
 
 #[derive(Debug, PartialEq, serde::Serialize)]
 #[serde(transparent)]
@@ -17,7 +17,7 @@ impl Title {
         if value.is_empty() {
             return Err(TitleNewError::Empty);
         }
-        if value.len() > MAX_LENGTH {
+        if value.len() > MAX_LEN {
             return Err(TitleNewError::TooLong);
         }
 
@@ -53,7 +53,7 @@ mod tests {
 
     #[test]
     fn test_title_new_too_long() {
-        let title_str = "a".repeat(MAX_LENGTH + 1);
+        let title_str = "a".repeat(MAX_LEN + 1);
         let title = Title::new(title_str);
         assert!(title.is_err());
         assert!(matches!(title.unwrap_err(), TitleNewError::TooLong));

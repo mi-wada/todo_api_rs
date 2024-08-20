@@ -1,4 +1,4 @@
-const MAX_LENGTH: usize = 255;
+const MAX_LEN: usize = 255;
 // https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
 const EMAIL_REGEX: &str = r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$";
 
@@ -20,7 +20,7 @@ impl Email {
         if email.is_empty() {
             return Err(EmailNewError::Empty);
         }
-        if email.len() > MAX_LENGTH {
+        if email.len() > MAX_LEN {
             return Err(EmailNewError::TooLong);
         }
         if !regex::Regex::new(EMAIL_REGEX).unwrap().is_match(&email) {
@@ -59,7 +59,7 @@ mod tests {
 
     #[test]
     fn test_email_new_too_long() {
-        let email_str = "a".repeat(MAX_LENGTH + 1);
+        let email_str = "a".repeat(MAX_LEN + 1);
         let email = Email::new(email_str);
         assert!(email.is_err());
         assert!(matches!(email.unwrap_err(), EmailNewError::TooLong));
