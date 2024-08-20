@@ -1,5 +1,5 @@
-const MIN_PASSWORD_LENGTH: usize = 8;
-const MAX_PASSWORD_LENGTH: usize = 255;
+const MIN_LENGTH: usize = 8;
+const MAX_LENGTH: usize = 255;
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct Password {
@@ -14,10 +14,10 @@ pub(crate) enum PasswordNewError {
 
 impl Password {
     pub(crate) fn new(password: String) -> Result<Self, PasswordNewError> {
-        if password.len() < MIN_PASSWORD_LENGTH {
+        if password.len() < MIN_LENGTH {
             return Err(PasswordNewError::TooShort);
         }
-        if password.len() > MAX_PASSWORD_LENGTH {
+        if password.len() > MAX_LENGTH {
             return Err(PasswordNewError::TooLong);
         }
 
@@ -45,7 +45,7 @@ mod tests {
 
     #[test]
     fn test_password_new_too_short() {
-        let password_str = "a".repeat(MIN_PASSWORD_LENGTH - 1);
+        let password_str = "a".repeat(MIN_LENGTH - 1);
         let password = Password::new(password_str);
         assert!(password.is_err());
         assert!(matches!(password.unwrap_err(), PasswordNewError::TooShort));
@@ -53,7 +53,7 @@ mod tests {
 
     #[test]
     fn test_password_new_too_long() {
-        let password_str = "a".repeat(MAX_PASSWORD_LENGTH + 1);
+        let password_str = "a".repeat(MAX_LENGTH + 1);
         let password = Password::new(password_str);
         assert!(password.is_err());
         assert!(matches!(password.unwrap_err(), PasswordNewError::TooLong));
