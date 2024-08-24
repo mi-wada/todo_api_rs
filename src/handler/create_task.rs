@@ -1,8 +1,9 @@
 use axum::{extract::State, http::StatusCode, Extension, Json};
 
 use crate::{
-    handler::{AppState, InternalServerError, InternalServerErrorCode},
+    handler::{InternalServerError, InternalServerErrorCode},
     task::{self, Task},
+    usecase::AppState,
     user::User,
 };
 

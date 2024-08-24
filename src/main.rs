@@ -11,6 +11,7 @@ mod handler;
 mod id;
 mod password;
 mod task;
+mod usecase;
 mod user;
 
 #[tokio::main]
@@ -23,7 +24,7 @@ async fn main() {
         .expect("Failed to bind to port");
 
     let db_pool = db_pool(&env).await;
-    let app_state = handler::AppState::new(env, db_pool);
+    let app_state = usecase::AppState::new(env, db_pool);
 
     let app = app(app_state);
 
@@ -40,7 +41,7 @@ async fn db_pool(env: &env::Env) -> sqlx::PgPool {
         .expect("Failed to connect to DB")
 }
 
-fn app(app_state: handler::AppState) -> Router {
+fn app(app_state: usecase::AppState) -> Router {
     let no_auth_routes = Router::new()
         // curl -v -X GET http://localhost:8080/healthz
         .route("/healthz", get(handler::get_healthz))

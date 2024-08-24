@@ -1,6 +1,6 @@
 use axum::{extract::State, http::StatusCode, response::IntoResponse};
 
-use super::AppState;
+use crate::usecase::AppState;
 
 pub(crate) async fn get_healthz(State(state): State<AppState>) -> impl IntoResponse {
     if db_healthy(&state.db_pool).await {

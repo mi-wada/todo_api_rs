@@ -26,8 +26,8 @@ impl Password {
 }
 
 impl Password {
-    pub(crate) fn value(&self) -> &str {
-        &self.password
+    pub(crate) fn hashed(&self) -> String {
+        crate::password::hash_password(&self.password)
     }
 }
 

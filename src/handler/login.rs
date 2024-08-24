@@ -1,7 +1,7 @@
 use axum::{extract::State, http::StatusCode, Json};
 use sqlx::Row;
 
-use crate::{handler::AppState, user};
+use crate::{usecase::AppState, user};
 
 pub(crate) async fn login(
     State(state): State<AppState>,

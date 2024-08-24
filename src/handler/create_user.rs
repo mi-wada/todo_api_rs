@@ -1,93 +1,51 @@
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 
 use crate::{
-    handler::{AppState, InternalServerError, InternalServerErrorCode},
-    password,
-    user::{self, User},
+    handler::InternalServerError,
+    usecase::{self, AppState},
+    user::User,
 };
 
 pub(crate) async fn create_user(
     State(state): State<AppState>,
-    payload: axum::Json<CreateUserPayload>,
-) -> (StatusCode, Json<CreateUserResponse>) {
-    if payload.email.is_none() {
-        return bad_request(BadRequestErrorCode::EmailEmpty, "Email is missing");
-    }
-    let email = match user::Email::new(payload.email.clone().unwrap()) {
-        Ok(email) => email,
-        Err(user::EmailNewError::Empty) => {
-            return bad_request(BadRequestErrorCode::EmailEmpty, "Email is empty");
-        }
-        Err(user::EmailNewError::TooLong) => {
-            return bad_request(BadRequestErrorCode::EmailTooLong, "Email is too long");
-        }
-        Err(user::EmailNewError::WrongFormat) => {
-            return bad_request(
-                BadRequestErrorCode::EmailWrongFormat,
-                "Email is in wrong format",
-            );
-        }
-    };
+    payload: axum::Json<usecase::CreateUserPayload>,
+) -> Result<impl IntoResponse, usecase::CreateUserError> {
+    let user = usecase::create_user(payload.0, state).await?;
 
-    if payload.password.is_none() {
-        return bad_request(BadRequestErrorCode::PasswordEmpty, "Password is missing");
-    }
-    let password = match user::Password::new(payload.password.clone().unwrap()) {
-        Ok(password) => password,
-        Err(user::PasswordNewError::TooShort) => {
-            return bad_request(
-                BadRequestErrorCode::PasswordTooShort,
-                "Password is too short",
-            );
-        }
-        Err(user::PasswordNewError::TooLong) => {
-            return bad_request(BadRequestErrorCode::PasswordTooLong, "Password is too long");
-        }
-    };
-    let hashed_password = password::hash_password(password.value());
-
-    let id = user::Id::new();
-
-    // TODO: Move this to other module.
-    match sqlx::query(
-        r#"
-INSERT INTO users (id, email, password)
-VALUES ($1::uuid, $2, $3)
-        "#,
-    )
-    .bind(id.value())
-    .bind(email.value())
-    .bind(hashed_password)
-    .execute(&state.db_pool)
-    .await
-    {
-        Ok(_) => {}
-        Err(sqlx::Error::Database(db_error)) if db_error.is_unique_violation() => {
-            return bad_request(BadRequestErrorCode::EmailTaken, "Email is already taken");
-        }
-        Err(_) => {
-            return (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                Json(CreateUserResponse::InternalServerError(
-                    InternalServerError {
-                        code: InternalServerErrorCode::InternalServerError,
-                        message: "Internal server error".into(),
-                    },
-                )),
-            );
-        }
-    }
-
-    (
-        StatusCode::CREATED,
-        Json(CreateUserResponse::Created(User::new(id, email))),
-    )
+    Ok((StatusCode::CREATED, Json(CreateUserResponse::Created(user))))
 }
 
-#[derive(serde::Deserialize)]
-pub(crate) struct CreateUserPayload {
-    email: Option<String>,
-    password: Option<String>,
+impl IntoResponse for usecase::CreateUserError {
+    fn into_response(self) -> axum::response::Response {
+        match self {
+            Self::EmailEmpty => bad_request(BadRequestErrorCode::EmailEmpty, "Email is empty"),
+            Self::EmailTooLong => {
+                bad_request(BadRequestErrorCode::EmailTooLong, "Email is too long")
+            }
+            Self::EmailWrongFormat => bad_request(
+                BadRequestErrorCode::EmailWrongFormat,
+                "Email has wrong format", // TODO: define message at Usecase level.
+            ),
+            Self::EmailTaken => bad_request(BadRequestErrorCode::EmailTaken, "Email is taken"),
+            Self::PasswordEmpty => {
+                bad_request(BadRequestErrorCode::PasswordEmpty, "Password is empty")
+            }
+            Self::PasswordTooShort => bad_request(
+                BadRequestErrorCode::PasswordTooShort,
+                "Password is too short",
+            ),
+            Self::PasswordTooLong => {
+                bad_request(BadRequestErrorCode::PasswordTooLong, "Password is too long")
+            }
+            Self::DatabaseError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(CreateUserResponse::InternalServerError(
+                    InternalServerError::default(),
+                )),
+            ),
+        }
+        .into_response()
+    }
 }
 
 #[derive(serde::Serialize)]
@@ -98,14 +56,11 @@ pub(crate) enum CreateUserResponse {
     InternalServerError(InternalServerError),
 }
 
-fn bad_request(
-    error: BadRequestErrorCode,
-    message: &str,
-) -> (StatusCode, Json<CreateUserResponse>) {
+fn bad_request(code: BadRequestErrorCode, message: &str) -> (StatusCode, Json<CreateUserResponse>) {
     (
         StatusCode::BAD_REQUEST,
         Json(CreateUserResponse::BadRequest(BadRequestError {
-            code: error,
+            code,
             message: message.into(),
         })),
     )

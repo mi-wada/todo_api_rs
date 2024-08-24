@@ -7,9 +7,12 @@ use axum::{
 };
 use sqlx::Row;
 
-use crate::user::{self, User};
+use crate::{
+    usecase::AppState,
+    user::{self, User},
+};
 
-use super::{AppState, InternalServerError, InternalServerErrorCode};
+use super::{InternalServerError, InternalServerErrorCode};
 
 pub(crate) async fn auth(
     State(state): State<AppState>,

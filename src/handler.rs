@@ -1,5 +1,3 @@
-use crate::env;
-
 mod create_user;
 pub(crate) use create_user::create_user;
 
@@ -14,22 +12,19 @@ pub(crate) use create_task::create_task;
 
 pub mod auth_middleware;
 
-#[derive(Clone)]
-pub(crate) struct AppState {
-    pub(crate) env: env::Env,
-    pub(crate) db_pool: sqlx::PgPool,
-}
-
-impl AppState {
-    pub(crate) fn new(env: env::Env, db_pool: sqlx::PgPool) -> Self {
-        Self { env, db_pool }
-    }
-}
-
 #[derive(serde::Serialize)]
 pub(crate) struct InternalServerError {
     code: InternalServerErrorCode,
     message: String,
+}
+
+impl Default for InternalServerError {
+    fn default() -> Self {
+        Self {
+            code: InternalServerErrorCode::InternalServerError,
+            message: "Internal server error".into(),
+        }
+    }
 }
 
 #[derive(serde::Serialize)]
