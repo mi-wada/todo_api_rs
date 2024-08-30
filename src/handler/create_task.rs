@@ -3,12 +3,12 @@ use axum::{extract::State, http::StatusCode, Extension, Json};
 use crate::{
     handler::{InternalServerError, InternalServerErrorCode},
     task::{self, Task},
-    usecase::AppState,
+    usecase::AppContext,
     user::User,
 };
 
 pub(crate) async fn create_task(
-    State(state): State<AppState>,
+    State(context): State<AppContext>,
     Extension(user): Extension<User>,
     payload: axum::Json<CreateTaskPayload>,
 ) -> (StatusCode, Json<CreateIssueResponse>) {
@@ -87,7 +87,7 @@ VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6)
     .bind(description.clone().map(|d| d.value().to_string()))
     .bind::<&str>(status.into())
     .bind(deadline.clone().map(|d| *d.value()))
-    .execute(&state.db_pool)
+    .execute(&context.db_pool)
     .await
     .is_err()
     {

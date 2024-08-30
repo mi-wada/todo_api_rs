@@ -8,14 +8,14 @@ use axum::{
 use sqlx::Row;
 
 use crate::{
-    usecase::AppState,
+    usecase::AppContext,
     user::{self, User},
 };
 
 use super::{InternalServerError, InternalServerErrorCode};
 
 pub(crate) async fn auth(
-    State(state): State<AppState>,
+    State(context): State<AppContext>,
     mut req: Request,
     next: Next,
 ) -> Result<Response, (StatusCode, Json<AuthMiddlewareResponse>)> {
@@ -29,7 +29,7 @@ pub(crate) async fn auth(
         }
     };
 
-    let user_id = match user::access_token::decode(token, &state.env.access_token_secret) {
+    let user_id = match user::access_token::decode(token, &context.env.access_token_secret) {
         Ok(claims) => user::Id::restore(claims.sub().into()),
         Err(user::access_token::DecodeError::Expired) => {
             return Err(unauthorized_error(
@@ -60,7 +60,7 @@ WHERE id = $1::uuid
             user::Email::restore(row.get(1)),
         )
     })
-    .fetch_one(&state.db_pool)
+    .fetch_one(&context.db_pool)
     .await
     .map_err(|e| match e {
         sqlx::Error::RowNotFound => unauthorized_error(

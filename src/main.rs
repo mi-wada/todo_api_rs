@@ -24,9 +24,9 @@ async fn main() {
         .expect("Failed to bind to port");
 
     let db_pool = db_pool(&env).await;
-    let app_state = usecase::AppState::new(env, db_pool);
+    let app_context = usecase::AppContext::new(env, db_pool);
 
-    let app = app(app_state);
+    let app = app(app_context);
 
     axum::serve(listener, app).await.unwrap();
 }
@@ -41,7 +41,7 @@ async fn db_pool(env: &env::Env) -> sqlx::PgPool {
         .expect("Failed to connect to DB")
 }
 
-fn app(app_state: usecase::AppState) -> Router {
+fn app(app_context: usecase::AppContext) -> Router {
     let no_auth_routes = Router::new()
         // curl -v -X GET http://localhost:8080/healthz
         .route("/healthz", get(handler::get_healthz))
@@ -54,12 +54,12 @@ fn app(app_state: usecase::AppState) -> Router {
         // curl -X POST http://localhost:8080/tasks -H "Content-Type: application/json" -H "Authorization: Bearer " -d '{"title": "task title", "status": "ToDo"}'
         .route("/tasks", post(handler::create_task))
         .route_layer(middleware::from_fn_with_state(
-            app_state.clone(),
+            app_context.clone(),
             auth_middleware::auth,
         ));
 
     Router::new()
         .nest("/", no_auth_routes)
         .nest("/", auth_routes)
-        .with_state(app_state)
+        .with_state(app_context)
 }

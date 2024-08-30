@@ -2,15 +2,15 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 
 use crate::{
     handler::InternalServerError,
-    usecase::{self, AppState},
+    usecase::{self, AppContext},
     user::User,
 };
 
 pub(crate) async fn create_user(
-    State(state): State<AppState>,
+    State(context): State<AppContext>,
     payload: axum::Json<usecase::CreateUserPayload>,
 ) -> Result<impl IntoResponse, usecase::CreateUserError> {
-    let user = usecase::create_user(payload.0, state).await?;
+    let user = usecase::create_user(payload.0, context).await?;
 
     Ok((StatusCode::CREATED, Json(CreateUserResponse::Created(user))))
 }

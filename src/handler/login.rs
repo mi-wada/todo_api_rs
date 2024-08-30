@@ -1,10 +1,10 @@
 use axum::{extract::State, http::StatusCode, Json};
 use sqlx::Row;
 
-use crate::{usecase::AppState, user};
+use crate::{usecase::AppContext, user};
 
 pub(crate) async fn login(
-    State(state): State<AppState>,
+    State(context): State<AppContext>,
     payload: axum::Json<LoginPayload>,
 ) -> (StatusCode, Json<LoginResponse>) {
     if payload.email.is_none() {
@@ -15,7 +15,7 @@ pub(crate) async fn login(
     }
 
     match authenticate(
-        &state.db_pool,
+        &context.db_pool,
         &payload.email.clone().unwrap(),
         &payload.password.clone().unwrap(),
     )
@@ -24,7 +24,7 @@ pub(crate) async fn login(
         Some(user_id) => (
             StatusCode::OK,
             Json(LoginResponse::Ok {
-                token: user::access_token::encode(user_id, None, &state.env.access_token_secret),
+                token: user::access_token::encode(user_id, None, &context.env.access_token_secret),
             }),
         ),
         None => (

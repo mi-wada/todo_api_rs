@@ -1,10 +1,10 @@
 use crate::user::{self, EmailNewError, PasswordNewError, User};
 
-use super::AppState;
+use super::AppContext;
 
 pub(crate) async fn create_user(
     payload: CreateUserPayload,
-    state: AppState,
+    context: AppContext,
 ) -> Result<User, CreateUserError> {
     let email = user::Email::new(payload.email.ok_or(CreateUserError::EmailEmpty)?)?;
 
@@ -22,7 +22,7 @@ VALUES ($1::uuid, $2, $3)
     .bind(id.value())
     .bind(email.value())
     .bind(hashed_password)
-    .execute(&state.db_pool)
+    .execute(&context.db_pool)
     .await
     {
         Ok(_) => {}
