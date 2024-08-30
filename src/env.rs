@@ -13,6 +13,11 @@ impl Env {
         dotenvy::dotenv().expect("Not found .env file");
     }
 
+    #[cfg(test)]
+    pub(crate) fn init_test() {
+        dotenvy::from_filename(".env.test").expect("Not found .env.test file");
+    }
+
     pub(crate) fn new() -> Self {
         Self {
             port: env::var("TODO_API_PORT")

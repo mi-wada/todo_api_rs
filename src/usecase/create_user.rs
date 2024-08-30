@@ -43,7 +43,7 @@ pub(crate) struct CreateUserPayload {
     password: Option<String>,
 }
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, Debug)]
 pub(crate) enum CreateUserError {
     EmailEmpty,
     EmailTooLong,
@@ -71,5 +71,46 @@ impl From<PasswordNewError> for CreateUserError {
             PasswordNewError::TooShort => Self::PasswordTooShort,
             PasswordNewError::TooLong => Self::PasswordTooLong,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use sqlx::postgres::PgPoolOptions;
+
+    use super::*;
+
+    async fn db_pool(env: &crate::env::Env) -> sqlx::PgPool {
+        PgPoolOptions::new()
+            .max_connections(5)
+            .idle_timeout(std::time::Duration::from_secs(5))
+            .acquire_timeout(std::time::Duration::from_secs(5))
+            .connect(&env.database_url)
+            .await
+            .expect("Failed to connect to DB")
+    }
+
+    async fn context() -> AppContext {
+        crate::env::Env::init_test();
+        let env = crate::env::Env::new();
+
+        let db_pool = db_pool(&env).await;
+
+        AppContext::new(env, db_pool)
+    }
+
+    #[tokio::test]
+    async fn test_create_user_ok() {
+        let email = format!("{}@example.com", uuid::Uuid::now_v7());
+        let payload = CreateUserPayload {
+            email: Some(email.clone()),
+            password: Some("password".into()),
+        };
+
+        let user = create_user(payload, context().await).await.unwrap();
+        assert!(!user.id().value().is_empty());
+        assert_eq!(user.email().value(), email);
+        // TODO: need to rollback
+        // * Fix AppContext.db_pool type. Accepts Pool and Tx.
     }
 }
