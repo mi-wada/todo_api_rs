@@ -1,6 +1,6 @@
 use axum::{
     middleware,
-    routing::{get, post},
+    routing::{delete, get, post},
     Router,
 };
 use handler::auth_middleware;
@@ -53,6 +53,8 @@ fn app(app_context: usecase::AppContext) -> Router {
     let auth_routes = Router::new()
         // curl -X POST http://localhost:8080/tasks -H "Content-Type: application/json" -H "Authorization: Bearer " -d '{"title": "task title", "status": "ToDo"}'
         .route("/tasks", post(handler::create_task))
+        // curl -X POST http://localhost:8080/tasks/:task_id -H "Content-Type: application/json" -H "Authorization: Bearer "
+        .route("/tasks/:task_id", delete(handler::delete_task))
         .route_layer(middleware::from_fn_with_state(
             app_context.clone(),
             auth_middleware::auth,

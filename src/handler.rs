@@ -10,6 +10,9 @@ pub(crate) use login::login;
 mod create_task;
 pub(crate) use create_task::create_task;
 
+mod delete_task;
+pub(crate) use delete_task::delete_task;
+
 pub mod auth_middleware;
 
 #[derive(serde::Serialize)]

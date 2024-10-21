@@ -30,6 +30,12 @@ pub(crate) struct DeleteTaskPayload {
     task_id: String,
 }
 
+impl DeleteTaskPayload {
+    pub(crate) fn new(user_id: String, task_id: String) -> Self {
+        Self { user_id, task_id }
+    }
+}
+
 #[derive(serde::Serialize, Debug)]
 pub(crate) enum DeleteTaskError {
     DatabaseError,
