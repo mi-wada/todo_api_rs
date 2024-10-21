@@ -1,6 +1,8 @@
 mod create_user;
 pub(crate) use create_user::{create_user, CreateUserError, CreateUserPayload};
 
+mod delete_task;
+
 use crate::env;
 
 #[derive(Clone)]
