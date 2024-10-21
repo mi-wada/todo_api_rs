@@ -43,4 +43,22 @@ impl Task {
             deadline,
         }
     }
+
+    pub(crate) fn restore(
+        id: String,
+        user_id: String,
+        title: String,
+        description: Option<String>,
+        status: String,
+        deadline: Option<String>,
+    ) -> Self {
+        Self {
+            id: Id::restore(id),
+            user_id: user::Id::restore(user_id),
+            title: Title::restore(title),
+            description: description.map(Description::restore),
+            status: Status::try_from(status.as_str()).unwrap(),
+            deadline: deadline.map(Deadline::restore),
+        }
+    }
 }

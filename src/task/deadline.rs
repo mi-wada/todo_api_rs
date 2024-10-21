@@ -18,6 +18,10 @@ impl Deadline {
             value: value.into(),
         })
     }
+
+    pub(crate) fn restore(value: String) -> Self {
+        Self::new(value).unwrap()
+    }
 }
 
 impl Deadline {

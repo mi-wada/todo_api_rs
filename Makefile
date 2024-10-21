@@ -19,11 +19,11 @@ run_middlewares:
 db_migrate:
 	if [ ! -e ./bin/psqldef ]; then make install_psqldef; fi
 	echo '🐔 Migrate DB'
-	./bin/psqldef -U=user -W=password -h=localhost -p=5432 todo_api_development < schema.sql
+	./bin/psqldef -U=user -W=password -h=localhost -p=5432 todo_api_development --enable-drop-table < schema.sql
 
 .PHONY: db_migrate_dryrun
 db_migrate_dryrun:
-	./bin/psqldef -U=user -W=password -h=localhost -p=5432 todo_api_development < schema.sql --dry-run
+	./bin/psqldef -U=user -W=password -h=localhost -p=5432 todo_api_development --enable-drop-table < schema.sql --dry-run
 
 .PHONY: preview_openapi
 preview_openapi:

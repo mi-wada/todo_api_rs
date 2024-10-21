@@ -23,6 +23,10 @@ impl Title {
 
         Ok(Self { value })
     }
+
+    pub(crate) fn restore(value: String) -> Self {
+        Self::new(value).unwrap()
+    }
 }
 
 impl Title {

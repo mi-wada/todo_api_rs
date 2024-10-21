@@ -51,6 +51,8 @@ fn app(app_context: usecase::AppContext) -> Router {
         .route("/login", post(handler::login::post));
 
     let auth_routes = Router::new()
+        // curl -X GET http://localhost:8080/tasks -H "Content-Type: application/json" -H "Authorization: Bearer "
+        .route("/tasks", get(handler::tasks::list))
         // curl -X POST http://localhost:8080/tasks -H "Content-Type: application/json" -H "Authorization: Bearer " -d '{"title": "task title", "status": "ToDo"}'
         .route("/tasks", post(handler::tasks::post))
         // curl -X POST http://localhost:8080/tasks/:task_id -H "Content-Type: application/json" -H "Authorization: Bearer "
