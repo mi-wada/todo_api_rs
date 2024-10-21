@@ -1,4 +1,4 @@
-use crate::user::{self, EmailNewError, PasswordNewError, User};
+use crate::user::{self, PasswordNewError, User, UserNewError};
 
 use super::AppContext;
 
@@ -6,12 +6,10 @@ pub(crate) async fn create_user(
     payload: CreateUserPayload,
     context: AppContext,
 ) -> Result<User, CreateUserError> {
-    let email = user::Email::new(payload.email.ok_or(CreateUserError::EmailEmpty)?)?;
+    let user = user::User::new(payload.email.ok_or(CreateUserError::EmailEmpty)?)?;
 
     let hashed_password =
         user::Password::new(payload.password.ok_or(CreateUserError::PasswordEmpty)?)?.hashed();
-
-    let id = user::Id::new();
 
     match sqlx::query(
         r#"
@@ -19,8 +17,8 @@ INSERT INTO users (id, email, password)
 VALUES ($1::uuid, $2, $3)
         "#,
     )
-    .bind(id.value())
-    .bind(email.value())
+    .bind(user.id().value())
+    .bind(user.email().value())
     .bind(hashed_password)
     .execute(&context.db_pool)
     .await
@@ -34,7 +32,7 @@ VALUES ($1::uuid, $2, $3)
         }
     }
 
-    Ok(User::new(id, email))
+    Ok(user)
 }
 
 #[derive(serde::Deserialize)]
@@ -55,12 +53,12 @@ pub(crate) enum CreateUserError {
     DatabaseError,
 }
 
-impl From<EmailNewError> for CreateUserError {
-    fn from(err: EmailNewError) -> Self {
+impl From<UserNewError> for CreateUserError {
+    fn from(err: UserNewError) -> Self {
         match err {
-            EmailNewError::Empty => Self::EmailEmpty,
-            EmailNewError::TooLong => Self::EmailTooLong,
-            EmailNewError::WrongFormat => Self::EmailWrongFormat,
+            UserNewError::EmailEmpty => Self::EmailEmpty,
+            UserNewError::EmailTooLong => Self::EmailTooLong,
+            UserNewError::EmailWrongFormat => Self::EmailWrongFormat,
         }
     }
 }

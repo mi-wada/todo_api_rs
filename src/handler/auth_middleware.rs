@@ -55,10 +55,7 @@ WHERE id = $1::uuid
     )
     .bind(user_id.value())
     .map(|row: sqlx::postgres::PgRow| {
-        User::new(
-            user::Id::restore(row.get::<sqlx::types::Uuid, _>(0).into()),
-            user::Email::restore(row.get(1)),
-        )
+        User::restore(row.get::<sqlx::types::Uuid, _>(0).into(), row.get(1))
     })
     .fetch_one(&context.db_pool)
     .await

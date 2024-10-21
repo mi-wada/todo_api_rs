@@ -15,8 +15,35 @@ pub(crate) struct User {
     email: crate::user::Email,
 }
 
+#[derive(Debug, PartialEq)]
+pub(crate) enum UserNewError {
+    EmailEmpty,
+    EmailTooLong,
+    EmailWrongFormat,
+}
+
+impl From<EmailNewError> for UserNewError {
+    fn from(err: EmailNewError) -> Self {
+        match err {
+            EmailNewError::Empty => Self::EmailEmpty,
+            EmailNewError::TooLong => Self::EmailTooLong,
+            EmailNewError::WrongFormat => Self::EmailWrongFormat,
+        }
+    }
+}
+
 impl User {
-    pub(crate) fn new(id: crate::user::Id, email: crate::user::Email) -> Self {
+    pub(crate) fn new(email: String) -> Result<Self, UserNewError> {
+        let id = crate::user::Id::new();
+        let email = crate::user::Email::new(email)?;
+
+        Ok(Self { id, email })
+    }
+
+    pub(crate) fn restore(id: String, email: String) -> User {
+        let id = crate::user::Id::restore(id);
+        let email = crate::user::Email::restore(email);
+
         Self { id, email }
     }
 }
