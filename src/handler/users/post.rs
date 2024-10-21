@@ -6,13 +6,13 @@ use crate::{
     user::User,
 };
 
-pub(crate) async fn create_user(
+pub(crate) async fn post(
     State(context): State<AppContext>,
     payload: axum::Json<usecase::CreateUserPayload>,
 ) -> Result<impl IntoResponse, usecase::CreateUserError> {
     let user = usecase::create_user(payload.0, context).await?;
 
-    Ok((StatusCode::CREATED, Json(CreateUserResponse::Created(user))))
+    Ok((StatusCode::CREATED, Json(Response::Created(user))))
 }
 
 impl IntoResponse for usecase::CreateUserError {
@@ -39,9 +39,7 @@ impl IntoResponse for usecase::CreateUserError {
             }
             Self::DatabaseError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(CreateUserResponse::InternalServerError(
-                    InternalServerError::default(),
-                )),
+                Json(Response::InternalServerError(InternalServerError::default())),
             ),
         }
         .into_response()
@@ -50,16 +48,16 @@ impl IntoResponse for usecase::CreateUserError {
 
 #[derive(serde::Serialize)]
 #[serde(untagged)]
-pub(crate) enum CreateUserResponse {
+pub(crate) enum Response {
     Created(User),
     BadRequest(BadRequestError),
     InternalServerError(InternalServerError),
 }
 
-fn bad_request(code: BadRequestErrorCode, message: &str) -> (StatusCode, Json<CreateUserResponse>) {
+fn bad_request(code: BadRequestErrorCode, message: &str) -> (StatusCode, Json<Response>) {
     (
         StatusCode::BAD_REQUEST,
-        Json(CreateUserResponse::BadRequest(BadRequestError {
+        Json(Response::BadRequest(BadRequestError {
             code,
             message: message.into(),
         })),

@@ -11,7 +11,7 @@ use crate::{
     user::User,
 };
 
-pub(crate) async fn delete_task(
+pub(crate) async fn delete(
     Path(task_id): Path<String>,
     State(context): State<AppContext>,
     Extension(user): Extension<User>,
@@ -30,9 +30,7 @@ impl IntoResponse for usecase::DeleteTaskError {
         match self {
             Self::DatabaseError => (
                 StatusCode::INTERNAL_SERVER_ERROR,
-                Json(DeleteTaskResponse::InternalServerError(
-                    InternalServerError::default(),
-                )),
+                Json(Response::InternalServerError(InternalServerError::default())),
             ),
         }
         .into_response()
@@ -41,7 +39,7 @@ impl IntoResponse for usecase::DeleteTaskError {
 
 #[derive(serde::Serialize)]
 #[serde(untagged)]
-pub(crate) enum DeleteTaskResponse {
+pub(crate) enum Response {
     NoContent,
     InternalServerError(InternalServerError),
 }

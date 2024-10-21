@@ -1,17 +1,7 @@
-mod create_user;
-pub(crate) use create_user::create_user;
-
-mod get_healthz;
-pub(crate) use get_healthz::get_healthz;
-
-mod login;
-pub(crate) use login::login;
-
-mod create_task;
-pub(crate) use create_task::create_task;
-
-mod delete_task;
-pub(crate) use delete_task::delete_task;
+pub(crate) mod healthz;
+pub(crate) mod login;
+pub(crate) mod tasks;
+pub(crate) mod users;
 
 pub mod auth_middleware;
 

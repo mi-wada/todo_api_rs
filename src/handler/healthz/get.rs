@@ -2,7 +2,7 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse};
 
 use crate::usecase::AppContext;
 
-pub(crate) async fn get_healthz(State(context): State<AppContext>) -> impl IntoResponse {
+pub(crate) async fn get(State(context): State<AppContext>) -> impl IntoResponse {
     if db_healthy(&context.db_pool).await {
         StatusCode::INTERNAL_SERVER_ERROR
     } else {

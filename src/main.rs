@@ -44,17 +44,17 @@ async fn db_pool(env: &env::Env) -> sqlx::PgPool {
 fn app(app_context: usecase::AppContext) -> Router {
     let no_auth_routes = Router::new()
         // curl -v -X GET http://localhost:8080/healthz
-        .route("/healthz", get(handler::get_healthz))
+        .route("/healthz", get(handler::healthz::get))
         // curl -X POST http://localhost:8080/users -H "Content-Type: application/json" -d '{"email": "user@example.com", "password": "password"}'
-        .route("/users", post(handler::create_user))
+        .route("/users", post(handler::users::post))
         // curl -X POST http://localhost:8080/login -H "Content-Type: application/json" -d '{"email": "user@example.com", "password": "password"}'
-        .route("/login", post(handler::login));
+        .route("/login", post(handler::login::post));
 
     let auth_routes = Router::new()
         // curl -X POST http://localhost:8080/tasks -H "Content-Type: application/json" -H "Authorization: Bearer " -d '{"title": "task title", "status": "ToDo"}'
-        .route("/tasks", post(handler::create_task))
+        .route("/tasks", post(handler::tasks::post))
         // curl -X POST http://localhost:8080/tasks/:task_id -H "Content-Type: application/json" -H "Authorization: Bearer "
-        .route("/tasks/:task_id", delete(handler::delete_task))
+        .route("/tasks/:task_id", delete(handler::tasks::delete))
         .route_layer(middleware::from_fn_with_state(
             app_context.clone(),
             auth_middleware::auth,

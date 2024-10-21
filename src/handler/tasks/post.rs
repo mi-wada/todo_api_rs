@@ -7,11 +7,11 @@ use crate::{
     user::User,
 };
 
-pub(crate) async fn create_task(
+pub(crate) async fn post(
     State(context): State<AppContext>,
     Extension(user): Extension<User>,
-    payload: axum::Json<CreateTaskPayload>,
-) -> (StatusCode, Json<CreateIssueResponse>) {
+    payload: axum::Json<Payload>,
+) -> (StatusCode, Json<Response>) {
     let id = task::Id::new();
 
     if payload.title.is_none() {
@@ -93,25 +93,20 @@ VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6)
     {
         return (
             StatusCode::INTERNAL_SERVER_ERROR,
-            Json(CreateIssueResponse::InternalServerError(
-                InternalServerError {
-                    code: InternalServerErrorCode::InternalServerError,
-                    message: "Internal server error".into(),
-                },
-            )),
+            Json(Response::InternalServerError(InternalServerError {
+                code: InternalServerErrorCode::InternalServerError,
+                message: "Internal server error".into(),
+            })),
         );
     }
 
     let task = Task::new(id, user.id().clone(), title, description, status, deadline);
 
-    (
-        StatusCode::CREATED,
-        Json(CreateIssueResponse::Created(task)),
-    )
+    (StatusCode::CREATED, Json(Response::Created(task)))
 }
 
 #[derive(serde::Deserialize)]
-pub(crate) struct CreateTaskPayload {
+pub(crate) struct Payload {
     title: Option<String>,
     description: Option<String>,
     status: Option<String>,
@@ -120,22 +115,16 @@ pub(crate) struct CreateTaskPayload {
 
 #[derive(serde::Serialize)]
 #[serde(untagged)]
-pub(crate) enum CreateIssueResponse {
+pub(crate) enum Response {
     Created(Task),
     BadRequest(BadRequestError),
     InternalServerError(InternalServerError),
 }
 
-fn bad_request_error(
-    code: BadRequestErrorCode,
-    message: String,
-) -> (StatusCode, Json<CreateIssueResponse>) {
+fn bad_request_error(code: BadRequestErrorCode, message: String) -> (StatusCode, Json<Response>) {
     (
         StatusCode::BAD_REQUEST,
-        Json(CreateIssueResponse::BadRequest(BadRequestError {
-            code,
-            message,
-        })),
+        Json(Response::BadRequest(BadRequestError { code, message })),
     )
 }
 
