@@ -41,10 +41,10 @@ impl User {
     }
 
     pub(crate) fn restore(id: String, email: String) -> User {
-        let id = crate::user::Id::restore(id);
-        let email = crate::user::Email::restore(email);
-
-        Self { id, email }
+        Self {
+            id: crate::user::Id::restore(id),
+            email: crate::user::Email::restore(email),
+        }
     }
 }
 
