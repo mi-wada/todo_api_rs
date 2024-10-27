@@ -190,13 +190,13 @@ paths:
           $ref: '#/components/responses/UnauthorizedError'
         '404':
           $ref: '#/components/responses/NotFoundError'
-    put:
+    patch:
       tags:
         - task
       summary: Update a task by ID.
       operationId: updateTask
       description: |-
-        The fields that are not provided will be set to null.
+        The fields that are not provided will not be updated.
       parameters:
         - name: id
           in: path
@@ -338,7 +338,6 @@ components:
         token:
           type: string
           format: JWT
-
     Task:
       type: object
       properties:
@@ -407,10 +406,6 @@ components:
           $ref: '#/components/schemas/TaskStatus'
         deadline:
           $ref: '#/components/schemas/TaskDeadline'
-      required:
-        - title
-        - status
-
     Error:
       type: object
       properties:
