@@ -1,9 +1,9 @@
-use axum::{extract::State, http::StatusCode, Extension, Json};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Extension, Json};
 
 use crate::{
-    handler::{InternalServerError, InternalServerErrorCode},
-    task::{self, Task},
-    usecase::AppContext,
+    handler::InternalServerError,
+    task::Task,
+    usecase::{create_task, AppContext},
     user::User,
 };
 
@@ -11,98 +11,20 @@ pub(crate) async fn post(
     State(context): State<AppContext>,
     Extension(user): Extension<User>,
     payload: axum::Json<Payload>,
-) -> (StatusCode, Json<Response>) {
-    let id = task::Id::new();
-
-    if payload.title.is_none() {
-        return bad_request_error(BadRequestErrorCode::TitleEmpty, "Title is missing".into());
-    }
-    let title = match task::Title::new(payload.title.clone().unwrap()) {
-        Ok(title) => title,
-        Err(task::TitleNewError::Empty) => {
-            return bad_request_error(BadRequestErrorCode::TitleEmpty, "Title is empty".into());
-        }
-        Err(task::TitleNewError::TooLong) => {
-            return bad_request_error(
-                BadRequestErrorCode::TitleTooLong,
-                "Title is too long".into(),
-            );
-        }
-    };
-
-    let description = match &payload.description {
-        Some(description) => match task::Description::new(description.into()) {
-            Ok(description) => Some(description),
-            Err(task::DescriptionNewError::TooLong) => {
-                return bad_request_error(
-                    BadRequestErrorCode::DescriptionTooLong,
-                    "Description is too long".into(),
-                );
-            }
+) -> Result<impl IntoResponse, create_task::Error> {
+    let task = create_task::create_task(
+        create_task::Payload {
+            user_id: user.id().clone(),
+            title: payload.title.clone(),
+            description: payload.description.clone(),
+            status: payload.status.clone(),
+            deadline: payload.deadline.clone(),
         },
-        None => None,
-    };
-
-    let status = match &payload.status {
-        Some(status) => match task::Status::try_from(status.as_str()) {
-            Ok(status) => status,
-            Err(task::StatusNewError::Unknown) => {
-                return bad_request_error(
-                    BadRequestErrorCode::StatusUnknown,
-                    "Status is unknown".into(),
-                );
-            }
-        },
-        None => {
-            return bad_request_error(
-                BadRequestErrorCode::StatusUnknown,
-                "Status is unknown".into(),
-            );
-        }
-    };
-
-    let deadline = match &payload.deadline {
-        Some(deadline) => match task::Deadline::new(deadline.into()) {
-            Ok(deadline) => Some(deadline),
-            Err(task::DeadlineNewError::WrongFormat) => {
-                return bad_request_error(
-                    BadRequestErrorCode::DeadlineWrongFormat,
-                    "Deadline is in wrong format".into(),
-                );
-            }
-        },
-        None => None,
-    };
-
-    // TODO: Move this to other module.
-    if sqlx::query(
-        r#"
-INSERT INTO tasks (id, user_id, title, description, status, deadline)
-VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6)
-        "#,
+        context,
     )
-    .bind(id.value())
-    .bind(user.id().value())
-    .bind(title.value())
-    .bind(description.clone().map(|d| d.value().to_string()))
-    .bind::<&str>(status.into())
-    .bind(deadline.clone().map(|d| *d.value()))
-    .execute(&context.db_pool)
-    .await
-    .is_err()
-    {
-        return (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            Json(Response::InternalServerError(InternalServerError {
-                code: InternalServerErrorCode::InternalServerError,
-                message: "Internal server error".into(),
-            })),
-        );
-    }
+    .await?;
 
-    let task = Task::new(id, user.id().clone(), title, description, status, deadline);
-
-    (StatusCode::CREATED, Json(Response::Created(task)))
+    Ok((StatusCode::CREATED, Json(Response::Created(task))))
 }
 
 #[derive(serde::Deserialize)]
@@ -141,4 +63,35 @@ pub(crate) enum BadRequestErrorCode {
     DescriptionTooLong,
     StatusUnknown,
     DeadlineWrongFormat,
+}
+
+impl IntoResponse for create_task::Error {
+    fn into_response(self) -> axum::response::Response {
+        match self {
+            Self::TitleEmpty => {
+                bad_request_error(BadRequestErrorCode::TitleEmpty, "Title is empty".into())
+            }
+            Self::TitleTooLong => bad_request_error(
+                BadRequestErrorCode::TitleTooLong,
+                "Title is too long".into(),
+            ),
+            Self::DescriptionTooLong => bad_request_error(
+                BadRequestErrorCode::DescriptionTooLong,
+                "Description is too long".into(),
+            ),
+            Self::StatusUnknown => bad_request_error(
+                BadRequestErrorCode::StatusUnknown,
+                "Status is unknown".into(),
+            ),
+            Self::DeadlineWrongFormat => bad_request_error(
+                BadRequestErrorCode::DeadlineWrongFormat,
+                "Deadline has wrong format".into(),
+            ),
+            Self::DatabaseError => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(Response::InternalServerError(InternalServerError::default())),
+            ),
+        }
+        .into_response()
+    }
 }
