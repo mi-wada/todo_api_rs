@@ -1,5 +1,10 @@
+#[cfg(test)]
+const BCRYPT_COST: u32 = 4;
+#[cfg(not(test))]
+const BCRYPT_COST: u32 = bcrypt::DEFAULT_COST;
+
 pub(crate) fn hash_password(password: &str) -> String {
-    bcrypt::hash(password, bcrypt::DEFAULT_COST).unwrap()
+    bcrypt::hash(password, BCRYPT_COST).unwrap()
 }
 
 pub(crate) fn verify_password(password: &str, hash: &str) -> bool {

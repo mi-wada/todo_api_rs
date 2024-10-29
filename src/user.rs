@@ -1,7 +1,7 @@
-mod email;
+pub(crate) mod email;
 pub(crate) use email::{Email, EmailNewError};
 
-mod password;
+pub(crate) mod password;
 pub(crate) use password::{Password, PasswordNewError};
 
 mod id;
@@ -9,7 +9,7 @@ pub(crate) use id::Id;
 
 pub(crate) mod access_token;
 
-#[derive(serde::Serialize, Clone)]
+#[derive(serde::Serialize, Clone, Debug)]
 pub(crate) struct User {
     id: crate::user::Id,
     email: crate::user::Email,

@@ -1,4 +1,4 @@
-const MAX_LEN: usize = 255;
+pub(crate) const MAX_LEN: usize = 255;
 // https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address
 const EMAIL_REGEX: &str = r"^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$";
 

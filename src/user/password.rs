@@ -1,5 +1,5 @@
-const MIN_LEN: usize = 8;
-const MAX_LEN: usize = 255;
+pub(crate) const MIN_LEN: usize = 8;
+pub(crate) const MAX_LEN: usize = 255;
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct Password {

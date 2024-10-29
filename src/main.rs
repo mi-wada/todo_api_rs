@@ -14,6 +14,9 @@ mod task;
 mod usecase;
 mod user;
 
+#[cfg(test)]
+mod test_helper;
+
 #[tokio::main]
 async fn main() {
     env::Env::init();

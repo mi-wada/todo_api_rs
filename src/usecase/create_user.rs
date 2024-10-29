@@ -41,7 +41,7 @@ pub(crate) struct CreateUserPayload {
     password: Option<String>,
 }
 
-#[derive(serde::Serialize, Debug)]
+#[derive(serde::Serialize, Debug, PartialEq)]
 pub(crate) enum CreateUserError {
     EmailEmpty,
     EmailTooLong,
@@ -74,41 +74,137 @@ impl From<PasswordNewError> for CreateUserError {
 
 #[cfg(test)]
 mod tests {
-    use sqlx::postgres::PgPoolOptions;
+    use crate::test_helper;
 
     use super::*;
 
-    async fn db_pool(env: &crate::env::Env) -> sqlx::PgPool {
-        PgPoolOptions::new()
-            .max_connections(5)
-            .idle_timeout(std::time::Duration::from_secs(5))
-            .acquire_timeout(std::time::Duration::from_secs(5))
-            .connect(&env.database_url)
-            .await
-            .expect("Failed to connect to DB")
-    }
-
-    async fn context() -> AppContext {
-        crate::env::Env::init_test();
-        let env = crate::env::Env::new();
-
-        let db_pool = db_pool(&env).await;
-
-        AppContext::new(env, db_pool)
-    }
-
     #[tokio::test]
-    async fn test_create_user_ok() {
-        let email = format!("{}@example.com", uuid::Uuid::now_v7());
+    async fn ok_create_user() {
+        let email = test_helper::unique_email();
         let payload = CreateUserPayload {
             email: Some(email.clone()),
             password: Some("password".into()),
         };
 
-        let user = create_user(payload, context().await).await.unwrap();
+        let user = create_user(payload, test_helper::context().await)
+            .await
+            .unwrap();
+
         assert!(!user.id().value().is_empty());
         assert_eq!(user.email().value(), email);
-        // TODO: need to rollback
-        // * Fix AppContext.db_pool type. Accepts Pool and Tx.
+        // TODO: Check that the user is saved to DB
+    }
+
+    #[tokio::test]
+    async fn err_create_user() {
+        struct Test {
+            args: CreateUserPayload,
+            expected: CreateUserError,
+        }
+
+        let valid_email = Some(test_helper::unique_email());
+        let valid_password = Some("password".into());
+
+        let taken_email = {
+            create_user(
+                CreateUserPayload {
+                    email: Some(test_helper::unique_email()),
+                    password: valid_password.clone(),
+                },
+                test_helper::context().await,
+            )
+            .await
+            .unwrap()
+            .email()
+            .value()
+            .to_string()
+        };
+
+        for test in [
+            Test {
+                args: CreateUserPayload {
+                    email: None,
+                    password: None,
+                },
+                expected: CreateUserError::EmailEmpty,
+            },
+            Test {
+                args: CreateUserPayload {
+                    email: None,
+                    password: valid_password.clone(),
+                },
+                expected: CreateUserError::EmailEmpty,
+            },
+            Test {
+                args: CreateUserPayload {
+                    email: Some("".into()),
+                    password: valid_password.clone(),
+                },
+                expected: CreateUserError::EmailEmpty,
+            },
+            Test {
+                args: CreateUserPayload {
+                    email: Some("a".repeat(user::email::MAX_LEN - 12 + 1) + "@example.com"),
+                    password: valid_password.clone(),
+                },
+                expected: CreateUserError::EmailTooLong,
+            },
+            Test {
+                args: CreateUserPayload {
+                    email: Some("invalid_email".into()),
+                    password: valid_password.clone(),
+                },
+                expected: CreateUserError::EmailWrongFormat,
+            },
+            Test {
+                args: CreateUserPayload {
+                    email: Some(taken_email.clone()),
+                    password: valid_password.clone(),
+                },
+                expected: CreateUserError::EmailTaken,
+            },
+            Test {
+                args: CreateUserPayload {
+                    email: valid_email.clone(),
+                    password: None,
+                },
+                expected: CreateUserError::PasswordEmpty,
+            },
+            Test {
+                args: CreateUserPayload {
+                    email: valid_email.clone(),
+                    password: Some("".into()),
+                },
+                expected: CreateUserError::PasswordTooShort,
+            },
+            Test {
+                args: CreateUserPayload {
+                    email: valid_email.clone(),
+                    password: Some("a".repeat(user::password::MIN_LEN - 1)),
+                },
+                expected: CreateUserError::PasswordTooShort,
+            },
+            Test {
+                args: CreateUserPayload {
+                    email: valid_email.clone(),
+                    password: Some("a".repeat(user::password::MAX_LEN + 1)),
+                },
+                expected: CreateUserError::PasswordTooLong,
+            },
+            Test {
+                args: CreateUserPayload {
+                    email: valid_email.clone(),
+                    password: None,
+                },
+                expected: CreateUserError::PasswordEmpty,
+            },
+        ] {
+            let err = create_user(test.args, test_helper::context().await)
+                .await
+                .unwrap_err();
+
+            assert_eq!(err, test.expected);
+            // TODO: Check that the user is not saved to DB
+        }
     }
 }
