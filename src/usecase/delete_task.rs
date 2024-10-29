@@ -4,7 +4,9 @@ pub(crate) async fn delete_task(payload: Payload, context: AppContext) -> Result
     match sqlx::query(
         r#"
 DELETE tasks
-WHERE id=$1::uuid AND user_id=$2::uuid
+WHERE
+    id=$1::uuid AND
+    user_id=$2::uuid
         "#,
     )
     .bind(payload.task_id)

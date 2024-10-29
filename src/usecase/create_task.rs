@@ -7,18 +7,31 @@ pub(crate) async fn create_task(
     context: AppContext,
 ) -> Result<task::Task, Error> {
     let task = task::Task::_new(
-        payload.user_id.value().to_string(),
-        payload.title.ok_or(task::TaskNewError::TitleEmpty)?,
+        payload.user_id.value().into(),
+        payload.title.ok_or(Error::TitleEmpty)?,
         payload.description,
-        payload.status.ok_or(task::TaskNewError::StatusUnknown)?,
+        payload.status.ok_or(Error::StatusUnknown)?,
         payload.deadline,
     )?;
 
     if sqlx::query(
         r#"
-INSERT INTO tasks (id, user_id, title, description, status, deadline)
-VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6)
-            "#,
+INSERT INTO tasks (
+    id,
+    user_id,
+    title,
+    description,
+    status,
+    deadline
+)
+VALUES (
+    $1::uuid,
+    $2::uuid,
+    $3,
+    $4,
+    $5,
+    $6
+)"#,
     )
     .bind(task.id().value())
     .bind(task.user_id().value())
@@ -31,7 +44,7 @@ VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6)
     .is_err()
     {
         // TODO: Add log
-        return Err(Error::DatabaseError);
+        return Err(Error::Database);
     }
 
     Ok(task)
@@ -52,7 +65,7 @@ pub(crate) enum Error {
     DescriptionTooLong,
     StatusUnknown,
     DeadlineWrongFormat,
-    DatabaseError,
+    Database,
 }
 
 impl From<task::TaskNewError> for Error {

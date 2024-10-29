@@ -87,7 +87,7 @@ impl IntoResponse for usecase::create_task::Error {
                 BadRequestErrorCode::DeadlineWrongFormat,
                 "Deadline has wrong format".into(),
             ),
-            Self::DatabaseError => (
+            Self::Database => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(Response::InternalServerError(InternalServerError::default())),
             ),
