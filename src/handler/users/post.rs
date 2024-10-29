@@ -37,7 +37,7 @@ impl IntoResponse for usecase::create_user::Error {
             Self::PasswordTooLong => {
                 bad_request(BadRequestErrorCode::PasswordTooLong, "Password is too long")
             }
-            Self::DatabaseError => (
+            Self::Database => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(Response::InternalServerError(InternalServerError::default())),
             ),

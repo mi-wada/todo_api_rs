@@ -25,7 +25,7 @@ VALUES ($1::uuid, $2, $3)
             return Err(Error::EmailTaken);
         }
         Err(_) => {
-            return Err(Error::DatabaseError);
+            return Err(Error::Database);
         }
     }
 
@@ -47,7 +47,7 @@ pub(crate) enum Error {
     PasswordEmpty,
     PasswordTooShort,
     PasswordTooLong,
-    DatabaseError,
+    Database,
 }
 
 impl From<UserNewError> for Error {
