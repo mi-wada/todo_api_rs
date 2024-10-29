@@ -2,14 +2,11 @@ use crate::user::{self, PasswordNewError, User, UserNewError};
 
 use super::AppContext;
 
-pub(crate) async fn create_user(
-    payload: CreateUserPayload,
-    context: AppContext,
-) -> Result<User, CreateUserError> {
-    let user = user::User::new(payload.email.ok_or(CreateUserError::EmailEmpty)?)?;
+pub(crate) async fn create_user(payload: Payload, context: AppContext) -> Result<User, Error> {
+    let user = user::User::new(payload.email.ok_or(Error::EmailEmpty)?)?;
 
     let hashed_password =
-        user::Password::new(payload.password.ok_or(CreateUserError::PasswordEmpty)?)?.hashed();
+        user::Password::new(payload.password.ok_or(Error::PasswordEmpty)?)?.hashed();
 
     match sqlx::query(
         r#"
@@ -25,10 +22,10 @@ VALUES ($1::uuid, $2, $3)
     {
         Ok(_) => {}
         Err(sqlx::Error::Database(db_error)) if db_error.is_unique_violation() => {
-            return Err(CreateUserError::EmailTaken);
+            return Err(Error::EmailTaken);
         }
         Err(_) => {
-            return Err(CreateUserError::DatabaseError);
+            return Err(Error::DatabaseError);
         }
     }
 
@@ -36,13 +33,13 @@ VALUES ($1::uuid, $2, $3)
 }
 
 #[derive(serde::Deserialize)]
-pub(crate) struct CreateUserPayload {
+pub(crate) struct Payload {
     email: Option<String>,
     password: Option<String>,
 }
 
 #[derive(serde::Serialize, Debug, PartialEq)]
-pub(crate) enum CreateUserError {
+pub(crate) enum Error {
     EmailEmpty,
     EmailTooLong,
     EmailWrongFormat,
@@ -53,7 +50,7 @@ pub(crate) enum CreateUserError {
     DatabaseError,
 }
 
-impl From<UserNewError> for CreateUserError {
+impl From<UserNewError> for Error {
     fn from(err: UserNewError) -> Self {
         match err {
             UserNewError::EmailEmpty => Self::EmailEmpty,
@@ -63,7 +60,7 @@ impl From<UserNewError> for CreateUserError {
     }
 }
 
-impl From<PasswordNewError> for CreateUserError {
+impl From<PasswordNewError> for Error {
     fn from(err: PasswordNewError) -> Self {
         match err {
             PasswordNewError::TooShort => Self::PasswordTooShort,
@@ -81,7 +78,7 @@ mod tests {
     #[tokio::test]
     async fn ok_create_user() {
         let email = test_helper::unique_email();
-        let payload = CreateUserPayload {
+        let payload = Payload {
             email: Some(email.clone()),
             password: Some("password".into()),
         };
@@ -98,8 +95,8 @@ mod tests {
     #[tokio::test]
     async fn err_create_user() {
         struct Test {
-            args: CreateUserPayload,
-            expected: CreateUserError,
+            args: Payload,
+            expected: Error,
         }
 
         let valid_email = Some(test_helper::unique_email());
@@ -107,7 +104,7 @@ mod tests {
 
         let taken_email = {
             create_user(
-                CreateUserPayload {
+                Payload {
                     email: Some(test_helper::unique_email()),
                     password: valid_password.clone(),
                 },
@@ -122,81 +119,81 @@ mod tests {
 
         for test in [
             Test {
-                args: CreateUserPayload {
+                args: Payload {
                     email: None,
                     password: None,
                 },
-                expected: CreateUserError::EmailEmpty,
+                expected: Error::EmailEmpty,
             },
             Test {
-                args: CreateUserPayload {
+                args: Payload {
                     email: None,
                     password: valid_password.clone(),
                 },
-                expected: CreateUserError::EmailEmpty,
+                expected: Error::EmailEmpty,
             },
             Test {
-                args: CreateUserPayload {
+                args: Payload {
                     email: Some("".into()),
                     password: valid_password.clone(),
                 },
-                expected: CreateUserError::EmailEmpty,
+                expected: Error::EmailEmpty,
             },
             Test {
-                args: CreateUserPayload {
+                args: Payload {
                     email: Some("a".repeat(user::email::MAX_LEN - 12 + 1) + "@example.com"),
                     password: valid_password.clone(),
                 },
-                expected: CreateUserError::EmailTooLong,
+                expected: Error::EmailTooLong,
             },
             Test {
-                args: CreateUserPayload {
+                args: Payload {
                     email: Some("invalid_email".into()),
                     password: valid_password.clone(),
                 },
-                expected: CreateUserError::EmailWrongFormat,
+                expected: Error::EmailWrongFormat,
             },
             Test {
-                args: CreateUserPayload {
+                args: Payload {
                     email: Some(taken_email.clone()),
                     password: valid_password.clone(),
                 },
-                expected: CreateUserError::EmailTaken,
+                expected: Error::EmailTaken,
             },
             Test {
-                args: CreateUserPayload {
+                args: Payload {
                     email: valid_email.clone(),
                     password: None,
                 },
-                expected: CreateUserError::PasswordEmpty,
+                expected: Error::PasswordEmpty,
             },
             Test {
-                args: CreateUserPayload {
+                args: Payload {
                     email: valid_email.clone(),
                     password: Some("".into()),
                 },
-                expected: CreateUserError::PasswordTooShort,
+                expected: Error::PasswordTooShort,
             },
             Test {
-                args: CreateUserPayload {
+                args: Payload {
                     email: valid_email.clone(),
                     password: Some("a".repeat(user::password::MIN_LEN - 1)),
                 },
-                expected: CreateUserError::PasswordTooShort,
+                expected: Error::PasswordTooShort,
             },
             Test {
-                args: CreateUserPayload {
+                args: Payload {
                     email: valid_email.clone(),
                     password: Some("a".repeat(user::password::MAX_LEN + 1)),
                 },
-                expected: CreateUserError::PasswordTooLong,
+                expected: Error::PasswordTooLong,
             },
             Test {
-                args: CreateUserPayload {
+                args: Payload {
                     email: valid_email.clone(),
                     password: None,
                 },
-                expected: CreateUserError::PasswordEmpty,
+                expected: Error::PasswordEmpty,
             },
         ] {
             let err = create_user(test.args, test_helper::context().await)

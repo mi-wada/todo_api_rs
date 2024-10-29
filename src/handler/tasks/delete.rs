@@ -15,9 +15,9 @@ pub(crate) async fn delete(
     Path(task_id): Path<String>,
     State(context): State<AppContext>,
     Extension(user): Extension<User>,
-) -> Result<impl IntoResponse, usecase::DeleteTaskError> {
-    usecase::delete_task(
-        usecase::DeleteTaskPayload::new(user.id().value().into(), task_id),
+) -> Result<impl IntoResponse, usecase::delete_task::Error> {
+    usecase::delete_task::delete_task(
+        usecase::delete_task::Payload::new(user.id().value().into(), task_id),
         context,
     )
     .await?;
@@ -25,7 +25,7 @@ pub(crate) async fn delete(
     Ok(StatusCode::NO_CONTENT)
 }
 
-impl IntoResponse for usecase::DeleteTaskError {
+impl IntoResponse for usecase::delete_task::Error {
     fn into_response(self) -> axum::response::Response {
         match self {
             Self::DatabaseError => (

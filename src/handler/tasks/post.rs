@@ -3,7 +3,7 @@ use axum::{extract::State, http::StatusCode, response::IntoResponse, Extension, 
 use crate::{
     handler::InternalServerError,
     task::Task,
-    usecase::{create_task, AppContext},
+    usecase::{self, AppContext},
     user::User,
 };
 
@@ -11,9 +11,9 @@ pub(crate) async fn post(
     State(context): State<AppContext>,
     Extension(user): Extension<User>,
     payload: axum::Json<Payload>,
-) -> Result<impl IntoResponse, create_task::Error> {
-    let task = create_task::create_task(
-        create_task::Payload {
+) -> Result<impl IntoResponse, usecase::create_task::Error> {
+    let task = usecase::create_task::create_task(
+        usecase::create_task::Payload {
             user_id: user.id().clone(),
             title: payload.title.clone(),
             description: payload.description.clone(),
@@ -65,7 +65,7 @@ pub(crate) enum BadRequestErrorCode {
     DeadlineWrongFormat,
 }
 
-impl IntoResponse for create_task::Error {
+impl IntoResponse for usecase::create_task::Error {
     fn into_response(self) -> axum::response::Response {
         match self {
             Self::TitleEmpty => {

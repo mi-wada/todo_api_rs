@@ -8,14 +8,14 @@ use crate::{
 
 pub(crate) async fn post(
     State(context): State<AppContext>,
-    payload: axum::Json<usecase::CreateUserPayload>,
-) -> Result<impl IntoResponse, usecase::CreateUserError> {
-    let user = usecase::create_user(payload.0, context).await?;
+    payload: axum::Json<usecase::create_user::Payload>,
+) -> Result<impl IntoResponse, usecase::create_user::Error> {
+    let user = usecase::create_user::create_user(payload.0, context).await?;
 
     Ok((StatusCode::CREATED, Json(Response::Created(user))))
 }
 
-impl IntoResponse for usecase::CreateUserError {
+impl IntoResponse for usecase::create_user::Error {
     fn into_response(self) -> axum::response::Response {
         match self {
             Self::EmailEmpty => bad_request(BadRequestErrorCode::EmailEmpty, "Email is empty"),

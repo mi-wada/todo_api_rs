@@ -1,9 +1,6 @@
 use super::AppContext;
 
-pub(crate) async fn delete_task(
-    payload: DeleteTaskPayload,
-    context: AppContext,
-) -> Result<(), DeleteTaskError> {
+pub(crate) async fn delete_task(payload: Payload, context: AppContext) -> Result<(), Error> {
     match sqlx::query(
         r#"
 DELETE tasks
@@ -17,7 +14,7 @@ WHERE id=$1::uuid AND user_id=$2::uuid
     {
         Ok(_) => {}
         Err(_) => {
-            return Err(DeleteTaskError::DatabaseError);
+            return Err(Error::DatabaseError);
         }
     }
 
@@ -25,46 +22,25 @@ WHERE id=$1::uuid AND user_id=$2::uuid
 }
 
 #[derive(serde::Deserialize)]
-pub(crate) struct DeleteTaskPayload {
+pub(crate) struct Payload {
     user_id: String,
     task_id: String,
 }
 
-impl DeleteTaskPayload {
+impl Payload {
     pub(crate) fn new(user_id: String, task_id: String) -> Self {
         Self { user_id, task_id }
     }
 }
 
 #[derive(serde::Serialize, Debug)]
-pub(crate) enum DeleteTaskError {
+pub(crate) enum Error {
     DatabaseError,
 }
 
 #[cfg(test)]
 mod tests {
-    use sqlx::postgres::PgPoolOptions;
-
     use super::*;
-
-    async fn db_pool(env: &crate::env::Env) -> sqlx::PgPool {
-        PgPoolOptions::new()
-            .max_connections(5)
-            .idle_timeout(std::time::Duration::from_secs(5))
-            .acquire_timeout(std::time::Duration::from_secs(5))
-            .connect(&env.database_url)
-            .await
-            .expect("Failed to connect to DB")
-    }
-
-    async fn context() -> AppContext {
-        crate::env::Env::init_test();
-        let env = crate::env::Env::new();
-
-        let db_pool = db_pool(&env).await;
-
-        AppContext::new(env, db_pool)
-    }
 
     // TODO: Impl test
 }
