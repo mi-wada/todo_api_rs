@@ -6,7 +6,7 @@ pub(crate) async fn create_task(
     payload: Payload,
     context: AppContext,
 ) -> Result<task::Task, Error> {
-    let task = task::Task::_new(
+    let task = task::Task::new(
         payload.user_id.value().into(),
         payload.title.ok_or(Error::TitleEmpty)?,
         payload.description,

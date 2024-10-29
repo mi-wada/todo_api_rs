@@ -35,7 +35,7 @@ pub(crate) enum TaskNewError {
 }
 
 impl Task {
-    pub(crate) fn _new(
+    pub(crate) fn new(
         user_id: String,
         title: String,
         description: Option<String>,

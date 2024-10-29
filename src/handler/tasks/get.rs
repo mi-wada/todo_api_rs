@@ -13,8 +13,6 @@ use crate::{
     user::User,
 };
 
-use sqlx::Row;
-
 pub(crate) async fn get(
     Path(task_id): Path<String>,
     State(context): State<AppContext>,
