@@ -1,26 +1,13 @@
+use crate::sql;
+
 use super::AppContext;
 
 pub(crate) async fn delete_task(payload: Payload, context: AppContext) -> Result<(), Error> {
-    match sqlx::query(
-        r#"
-DELETE tasks
-WHERE
-    id=$1::uuid AND
-    user_id=$2::uuid
-        "#,
-    )
-    .bind(payload.task_id)
-    .bind(payload.user_id)
-    .execute(&context.db_pool)
-    .await
+    match sql::delete_task_by_id::query(&payload.user_id, &payload.task_id, &context.db_pool).await
     {
-        Ok(_) => {}
-        Err(_) => {
-            return Err(Error::DatabaseError);
-        }
+        Ok(_) => Ok(()),
+        Err(_) => Err(Error::Database),
     }
-
-    Ok(())
 }
 
 #[derive(serde::Deserialize)]
@@ -37,7 +24,7 @@ impl Payload {
 
 #[derive(serde::Serialize, Debug)]
 pub(crate) enum Error {
-    DatabaseError,
+    Database,
 }
 
 #[cfg(test)]

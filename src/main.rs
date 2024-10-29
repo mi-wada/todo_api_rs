@@ -10,6 +10,7 @@ mod env;
 mod handler;
 mod id;
 mod password;
+mod sql;
 mod task;
 mod usecase;
 mod user;

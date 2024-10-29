@@ -28,7 +28,7 @@ pub(crate) async fn delete(
 impl IntoResponse for usecase::delete_task::Error {
     fn into_response(self) -> axum::response::Response {
         match self {
-            Self::DatabaseError => (
+            Self::Database => (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(Response::InternalServerError(InternalServerError::default())),
             ),

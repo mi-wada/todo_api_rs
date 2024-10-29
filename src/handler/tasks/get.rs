@@ -7,6 +7,7 @@ use axum::{
 
 use crate::{
     handler::{InternalServerError, NotFoundError},
+    sql,
     task::Task,
     usecase::AppContext,
     user::User,
@@ -19,32 +20,10 @@ pub(crate) async fn get(
     State(context): State<AppContext>,
     Extension(user): Extension<User>,
 ) -> Result<impl IntoResponse, Error> {
-    let task = sqlx::query(
-        r#"
-SELECT id, user_id, title, description, status, deadline
-FROM tasks
-WHERE user_id = $1::uuid AND id = $2::uuid
-        "#,
-    )
-    .bind(user.id().value())
-    .bind(task_id)
-    .map(|row: sqlx::postgres::PgRow| {
-        Task::restore(
-            row.get::<sqlx::types::Uuid, _>(0).into(),
-            row.get::<sqlx::types::Uuid, _>(1).into(),
-            row.get(2),
-            row.get(3),
-            row.get(4),
-            row.get(5),
-        )
-    })
-    .fetch_optional(&context.db_pool)
-    .await
-    .map_err(|_| Error::DatabaseError)?;
-
-    match task {
-        Some(task) => Ok((StatusCode::OK, Json(Response::Ok(task)))),
-        None => Err(Error::NotFound),
+    match sql::get_task_by_id::query(user.id().value(), &task_id, &context.db_pool).await {
+        Ok(task) => Ok((StatusCode::OK, Json(Response::Ok(task)))),
+        Err(sql::get_task_by_id::Error::NotFound) => Err(Error::NotFound),
+        Err(sql::get_task_by_id::Error::Unknown) => Err(Error::DatabaseError),
     }
 }
 
